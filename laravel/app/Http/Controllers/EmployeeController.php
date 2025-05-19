@@ -5,84 +5,86 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use App\Models\Department;
+use Spatie\Permission\Models\Role;
 
 class EmployeeController extends Controller
 {
     public function index(Request $request)
     {
-        try {
-            $employees = User::with(['roles', 'department'])
-                ->whereDoesntHave('roles', function($q) {
-                    $q->where('name', 'admin');
-                })
-                ->orderBy('name')
-                ->get()
-                ->map(function ($user) {
-                    return [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'role' => $user->roles->first()?->name ?? 'employee',
-                        'department' => $user->department?->name ?? 'Non assigné',
-                        'salary' => $user->Salaire_base,
-                    ];
-                });
+        $query = User::query()
+            ->whereDoesntHave('roles', function($q) {
+                $q->where('name', 'admin');
+            });
 
-            if ($request->ajax() || $request->wantsJson() || $request->query('inertia') === 'false') {
-                return response()->json(['employees' => $employees]);
-            }
-
-            return Inertia::render('Employees/Index', [
-                'employees' => $employees
-            ]);
-        } catch (\Throwable $e) {
-            \Log::error('Erreur EmployeeController@index: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return response()->json(['error' => 'Erreur serveur: ' . $e->getMessage()], 500);
+        // Recherche
+        if ($request->search) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', "%{$request->search}%")
+                  ->orWhere('email', 'like', "%{$request->search}%");
+            });
         }
-    }
 
-    public function edit(User $user)
-    {
-        return Inertia::render('Employees/Edit', [
-            'employee' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->roles->first()?->name ?? 'employee',
-                'department' => $user->department?->name ?? 'Non assigné',
-                'salary' => $user->Salaire_base,
-            ]
+        // Tri
+        $sortField = $request->sort_field ?? 'name';
+        $sortDirection = $request->sort_direction ?? 'asc';
+        $query->orderBy($sortField, $sortDirection);
+
+        $employees = $query->get();
+        $departments = Department::all(['id', 'name']);
+        $roles = Role::where('name', '!=', 'admin')->get(['id', 'name']);
+
+        return Inertia::render('Employees/Index', [
+            'employees' => $employees,
+            'departments' => $departments,
+            'roles' => $roles,
+            'filters' => $request->all(['search', 'sort_field', 'sort_direction'])
         ]);
     }
 
-    public function update(Request $request, User $user)
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'Salaire_base' => 'required|numeric|min:0',
-            'department_id' => 'nullable|exists:departments,id',
-            'role' => 'required|in:admin,leader,employee'
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:8',
+            'Salaire_base' => 'required|numeric',
+            'department_id' => 'required|exists:departments,id',
+            'role' => 'required|exists:roles,name',
         ]);
 
-        $user->update([
+        $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
             'Salaire_base' => $validated['Salaire_base'],
             'department_id' => $validated['department_id']
         ]);
 
-        // Mettre à jour le rôle
-        $user->syncRoles([$validated['role']]);
+        $user->assignRole($validated['role']);
 
-        return redirect()->route('employees.index')
-            ->with('success', 'Employé mis à jour avec succès');
+        return redirect()->back()->with('success', 'Employé ajouté avec succès');
     }
 
-    public function destroy(User $user)
+    public function update(Request $request, User $employee)
     {
-        $user->delete();
-        return redirect()->route('employees.index')
-            ->with('success', 'Employé supprimé avec succès');
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => ['required', 'email', Rule::unique('users')->ignore($employee->id)],
+            'Salaire_base' => 'required|numeric',
+            'department_id' => 'nullable|exists:departments,id'
+        ]);
+
+        $employee->update($validated);
+
+        return redirect()->back()->with('success', 'Employé modifié avec succès');
     }
-} 
+
+    public function destroy(User $employee)
+    {
+        $employee->delete();
+        return redirect()->back()->with('success', 'Employé supprimé avec succès');
+    }
+}

@@ -67,12 +67,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // =========================
 
     // Employés (admin ou toute personne ayant la permission)
-    Route::middleware(['permission:manage_employees'])->group(function () {
-        Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
-        Route::get('/employees/{user}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
-        Route::put('/employees/{user}', [EmployeeController::class, 'update'])->name('employees.update');
-        Route::delete('/employees/{user}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
+
+
+    Route::prefix('employees')->name('employees.')->group(function () {
+        Route::get('/', [EmployeeController::class, 'index'])->name('index');
+        Route::post('/', [EmployeeController::class, 'store'])->name('store');
+        Route::put('/{employee}', [EmployeeController::class, 'update'])->name('update');
+        Route::delete('/{employee}', [EmployeeController::class, 'destroy'])->name('destroy');
     });
+    
+
 
     // Départements (admin ou toute personne ayant la permission)
     // Route::middleware(['permission:edit_department'])->group(function () {

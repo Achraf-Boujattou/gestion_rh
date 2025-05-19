@@ -502,7 +502,7 @@ export default function Dashboard() {
                     <div className="role-badge">{roleLabel}</div>
                     <p>Vous êtes connecté en tant que <b>{roleLabel}</b>.<br />Profitez de votre espace personnalisé.</p>
 
-                    {hasPermission('manage_employees') && (
+                    {/* {hasPermission('manage_employees') && (
                         <button
                             style={{
                                 background: 'linear-gradient(90deg, #eaf0fa 60%, #1563ff 100%)',
@@ -557,7 +557,7 @@ export default function Dashboard() {
                                 </table>
                             )}
                         </div>
-                    )}
+                    )} */}
                 </div>
             </main>
             </div>

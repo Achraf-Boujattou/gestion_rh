@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePage, router } from '@inertiajs/react';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function Index() {
-    const { employees, departments = [], roles = [], filters } = usePage().props;
+    const { employees, departments = [], roles = [], filters, flash = {} } = usePage().props;
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [sortField, setSortField] = useState(filters.sort_field || 'name');
     const [sortDirection, setSortDirection] = useState(filters.sort_direction || 'asc');
@@ -16,6 +17,16 @@ export default function Index() {
         department_id: '',
         role: '',
     });
+
+    // Affichage des notifications de succès/erreur depuis Laravel (flash)
+    useEffect(() => {
+        if (flash.success) {
+            toast.success(flash.success);
+        }
+        if (flash.error) {
+            toast.error(flash.error);
+        }
+    }, [flash.success, flash.error]);
 
     // Gestion du tri
     const handleSort = (field) => {
@@ -53,6 +64,10 @@ export default function Index() {
                     department_id: '',
                     role: '',
                 });
+                toast.success('Employé ajouté avec succès !');
+            },
+            onError: (errors) => {
+                Object.values(errors).forEach(err => toast.error(err));
             }
         });
     };
@@ -71,6 +86,10 @@ export default function Index() {
                     department_id: '',
                     role: '',
                 });
+                toast.success('Employé modifié avec succès !');
+            },
+            onError: (errors) => {
+                Object.values(errors).forEach(err => toast.error(err));
             }
         });
     };
@@ -78,12 +97,18 @@ export default function Index() {
     // Suppression d'un employé
     const handleDelete = (employee) => {
         if (confirm('Êtes-vous sûr de vouloir supprimer cet employé ?')) {
-            router.delete(`/employees/${employee.id}`);
+            router.delete(`/employees/${employee.id}`, {
+                onSuccess: () => toast.success('Employé supprimé avec succès !'),
+                onError: (errors) => {
+                    Object.values(errors).forEach(err => toast.error(err));
+                }
+            });
         }
     };
 
     return (
         <div style={{ padding: 40 }}>
+            <Toaster position="top-right" />
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
                 <input
                     type="text"

@@ -69,7 +69,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Employés (admin ou toute personne ayant la permission)
 
 
-    Route::prefix('employees')->name('employees.')->group(function () {
+    Route::prefix('employees')->name('employees')->group(function () {
         Route::get('/', [EmployeeController::class, 'index'])->name('index');
         Route::post('/', [EmployeeController::class, 'store'])->name('store');
         Route::put('/{employee}', [EmployeeController::class, 'update'])->name('update');
@@ -79,6 +79,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
     // Départements (admin ou toute personne ayant la permission)
+
     // Route::middleware(['permission:edit_department'])->group(function () {
     //     Route::get('/departments', [DepartmentController::class, 'index'])->name('departments.index');
     //     Route::post('/departments', [DepartmentController::class, 'store']);
@@ -86,13 +87,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     //     Route::delete('/departments/{department}', [DepartmentController::class, 'destroy']);
     //     Route::get('/departments/users', [DepartmentController::class, 'users']);
     // });
-    Route::prefix('departments')->group(function () {
+    Route::middleware(['auth'])->prefix('departments')->group(function () {
         Route::get('/', [DepartmentController::class, 'index'])->name('departments.index');
         Route::post('/', [DepartmentController::class, 'store']);
         Route::put('/{department}', [DepartmentController::class, 'update']);
         Route::delete('/{department}', [DepartmentController::class, 'destroy']);
         Route::get('/users', [DepartmentController::class, 'users']);
     });
+    
+    // Route::prefix('departments')->group(function () {
+    //     Route::get('/', [DepartmentController::class, 'index'])->name('departments.index');
+    //     Route::post('/', [DepartmentController::class, 'store']);
+    //     Route::put('/{department}', [DepartmentController::class, 'update']);
+    //     Route::delete('/{department}', [DepartmentController::class, 'destroy']);
+    //     Route::get('/users', [DepartmentController::class, 'users']);
+    // });
     
 
     // =========================

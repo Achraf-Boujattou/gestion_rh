@@ -1,5 +1,7 @@
 import { usePage, router } from '@inertiajs/react';
 import React, { useState } from 'react';
+import ImportBiometricsButton from '../components/ImportBiometricsButton';
+import UserExportModal from '../components/UserExportModal';
 
 const FEATURES = [
     {
@@ -59,6 +61,7 @@ export default function Dashboard() {
     const [showEmployees, setShowEmployees] = useState(false);
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [showImportModal, setShowImportModal] = useState(false);
 
     const handleLogout = (e) => {
         e.preventDefault();
@@ -66,6 +69,11 @@ export default function Dashboard() {
     };
 
     const handleFeatureClick = (feature) => {
+        if (!feature) return;
+        if (feature.permission === 'import_biometrics') {
+            setShowImportModal(true);
+            return;
+        }
         if (feature.permission === 'manage_employees') {
             setSelectedFeature(feature);
             router.get('/employees');
@@ -501,65 +509,9 @@ export default function Dashboard() {
                     <h1>Bienvenue, {user?.name} !</h1>
                     <div className="role-badge">{roleLabel}</div>
                     <p>Vous êtes connecté en tant que <b>{roleLabel}</b>.<br />Profitez de votre espace personnalisé.</p>
-
-                    {/* {hasPermission('manage_employees') && (
-                        <button
-                            style={{
-                                background: 'linear-gradient(90deg, #eaf0fa 60%, #1563ff 100%)',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '24px',
-                                padding: '12px 32px',
-                                fontWeight: 'bold',
-                                fontSize: '1.1em',
-                                margin: '24px 0',
-                                cursor: 'pointer',
-                                boxShadow: '0 2px 8px #1563ff22'
-                            }}
-                            onClick={() => router.visit('/employees')}
-                        >
-                            manage_employees
-                        </button>
-                    )}
-
-                    {showEmployees && (
-                        <div>
-                            {loading ? (
-                                <div>Chargement...</div>
-                            ) : (
-                                <table className="employees-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Nom</th>
-                                            <th>Email</th>
-                                            <th>Rôle</th>
-                                            <th>Département</th>
-                                            <th>Salaire</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {employees.map(emp => (
-                                            <tr key={emp.id}>
-                                                <td>{emp.name}</td>
-                                                <td>{emp.email}</td>
-                                                <td>{emp.role}</td>
-                                                <td>{emp.department}</td>
-                                                <td>{emp.salary} €</td>
-                                                <td>
-                                                    <button onClick={() => handleShowInfo(emp)} style={{marginRight: '8px'}}>Afficher infos</button>
-                                                    <button onClick={() => handleEdit(emp)} style={{marginRight: '8px'}}>Modifier</button>
-                                                    <button onClick={() => handleDelete(emp)} style={{color: 'red'}}>Supprimer</button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
-                    )} */}
                 </div>
             </main>
-            </div>
+            <UserExportModal show={showImportModal} onClose={() => setShowImportModal(false)} />
+        </div>
     );
 }

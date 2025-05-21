@@ -29,7 +29,12 @@ class DepartmentController extends Controller
             'leader_id' => 'nullable|exists:users,id',
         ]);
         $department = Department::create($validated);
-        return response()->json(['department' => $department->load('leader')], 201);
+        
+        if ($request->wantsJson()) {
+            return response()->json(['department' => $department->load('leader')], 201);
+        }
+        
+        return redirect()->back()->with('success', 'Département créé avec succès');
     }
 
     public function update(Request $request, Department $department)
@@ -40,13 +45,23 @@ class DepartmentController extends Controller
             'leader_id' => 'nullable|exists:users,id',
         ]);
         $department->update($validated);
-        return response()->json(['department' => $department->load('leader')]);
+        
+        if ($request->wantsJson()) {
+            return response()->json(['department' => $department->load('leader')]);
+        }
+        
+        return redirect()->back()->with('success', 'Département modifié avec succès');
     }
 
     public function destroy(Department $department)
     {
         $department->delete();
-        return response()->json(['success' => true]);
+        
+        if (request()->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+        
+        return redirect()->back()->with('success', 'Département supprimé avec succès');
     }
 
     public function users()

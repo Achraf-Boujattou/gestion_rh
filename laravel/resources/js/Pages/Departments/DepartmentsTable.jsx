@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 export default function DepartmentsTable({ departments: initialDepartments }) {
     const [departments, setDepartments] = useState(initialDepartments);
@@ -13,9 +14,13 @@ export default function DepartmentsTable({ departments: initialDepartments }) {
     }, [initialDepartments]);
 
     const fetchUsers = async () => {
-        const res = await fetch('/departments/users');
-        const data = await res.json();
-        setUsers(data.users);
+        try {
+            const res = await fetch('/departments/users');
+            const data = await res.json();
+            setUsers(data.users);
+        } catch (error) {
+            toast.error('Erreur lors du chargement des utilisateurs');
+        }
     };
 
     const handleAdd = () => {
@@ -38,11 +43,27 @@ export default function DepartmentsTable({ departments: initialDepartments }) {
     };
 
     const handleDelete = async (dept) => {
-        if (!window.confirm('Supprimer ce département ?')) return;
+        if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce département ?')) return;
+        
         setLoading(true);
-        await fetch(`/departments/${dept.id}`, { method: 'DELETE', headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': window.Laravel?.csrfToken } });
-        await refreshDepartments();
-        setLoading(false);
+        try {
+            const response = await fetch(`/departments/${dept.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                }
+            });
+            
+            if (!response.ok) throw new Error('Erreur lors de la suppression');
+            
+            await refreshDepartments();
+            toast.success('Département supprimé avec succès');
+        } catch (error) {
+            toast.error('Erreur lors de la suppression du département');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleChange = (e) => {
@@ -52,30 +73,46 @@ export default function DepartmentsTable({ departments: initialDepartments }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        const method = isEdit ? 'PUT' : 'POST';
-        const url = isEdit ? `/departments/${form.id}` : '/departments';
-        await fetch(url, {
-            method,
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': window.Laravel?.csrfToken
-            },
-            body: JSON.stringify({
-                name: form.name,
-                description: form.description,
-                leader_id: form.leader_id || null
-            })
-        });
-        setShowForm(false);
-        await refreshDepartments();
-        setLoading(false);
+        
+        try {
+            const method = isEdit ? 'PUT' : 'POST';
+            const url = isEdit ? `/departments/${form.id}` : '/departments';
+            
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                },
+                body: JSON.stringify({
+                    name: form.name,
+                    description: form.description,
+                    leader_id: form.leader_id || null
+                })
+            });
+
+            if (!response.ok) throw new Error('Erreur lors de l\'opération');
+
+            const data = await response.json();
+            setShowForm(false);
+            await refreshDepartments();
+            toast.success(isEdit ? 'Département modifié avec succès' : 'Département créé avec succès');
+        } catch (error) {
+            toast.error('Une erreur est survenue');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const refreshDepartments = async () => {
-        const res = await fetch('/departments?inertia=false');
-        const data = await res.json();
-        setDepartments(data.departments);
+        try {
+            const res = await fetch('/departments?inertia=false');
+            const data = await res.json();
+            setDepartments(data.departments);
+        } catch (error) {
+            toast.error('Erreur lors du rafraîchissement des départements');
+        }
     };
 
     return (

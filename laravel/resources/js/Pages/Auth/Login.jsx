@@ -131,7 +131,7 @@ export default function Login({ status, canResetPassword }) {
                 }
             `}</style>
             <form className="auth-card" onSubmit={submit}>
-                <div className="auth-title">ONSSTA</div>
+                <div className="auth-title">ONESSTA</div>
                 <div className="auth-subtitle">Content de vous revoir !</div>
                 <div className="auth-desc">Connectez-vous pour continuer vers Onessta.</div>
                 {status && <div style={{ color: '#1563ff', marginBottom: 12 }}>{status}</div>}

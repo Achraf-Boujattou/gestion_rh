@@ -21,8 +21,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard (accessible à tous les utilisateurs authentifiés)
     Route::get('/dashboard', function () {
         $user = auth()->user();
+        $departments = \App\Models\Department::with('leader')->get();
+        $employees = \App\Models\User::with(['roles', 'department'])
+            ->whereDoesntHave('roles', function($q) {
+                $q->where('name', 'admin');
+            })
+            ->get();
+        
         return Inertia::render('Dashboard', [
             'permissions' => $user->getAllPermissions()->pluck('name'),
+            'departments' => $departments,
+            'employees' => $employees,
+            'meta' => [
+                'current_page' => 1,
+                'per_page' => 10,
+                'total' => $employees->count(),
+                'last_page' => ceil($employees->count() / 10)
+            ],
+            'links' => [
+                'prev' => null,
+                'next' => null
+            ]
         ]);
     })->name('dashboard');
 
@@ -89,10 +108,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // });
     Route::middleware(['auth'])->prefix('departments')->group(function () {
         Route::get('/', [DepartmentController::class, 'index'])->name('departments.index');
+        Route::get('/users', [DepartmentController::class, 'users']);
         Route::post('/', [DepartmentController::class, 'store']);
+        Route::get('/{department}', [DepartmentController::class, 'show']);
         Route::put('/{department}', [DepartmentController::class, 'update']);
         Route::delete('/{department}', [DepartmentController::class, 'destroy']);
-        Route::get('/users', [DepartmentController::class, 'users']);
     });
     
     // Route::prefix('departments')->group(function () {

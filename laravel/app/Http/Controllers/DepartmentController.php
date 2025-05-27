@@ -10,14 +10,69 @@ class DepartmentController extends Controller
 {
     public function index(Request $request)
     {
-        $departments = Department::with('leader')->orderBy('name')->get();
-        // SUPPRIME cette condition :
-        // if ($request->ajax() || $request->wantsJson() || $request->query('inertia') === 'false') {
-        //     return response()->json(['departments' => $departments]);
-        // }
-        // Garde uniquement :
+        $query = Department::with('leader');
+
+        // Recherche
+        if ($request->search) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('name', 'like', "%{$searchTerm}%")
+                  ->orWhere('description', 'like', "%{$searchTerm}%")
+                  ->orWhereHas('leader', function($q) use ($searchTerm) {
+                      $q->where('name', 'like', "%{$searchTerm}%");
+                  });
+            });
+        }
+
+        // Tri
+        $sortField = $request->input('sort_field', 'name');
+        $sortDirection = $request->input('sort_direction', 'asc');
+
+        if ($sortField === 'leader_id') {
+            $query->leftJoin('users', 'departments.leader_id', '=', 'users.id')
+                  ->orderBy('users.name', $sortDirection)
+                  ->select('departments.*');
+        } else {
+            $query->orderBy($sortField, $sortDirection);
+        }
+
+        // Pagination
+        $departments = $query->paginate(10);
+
+        if ($request->wantsJson() || $request->header('X-Inertia')) {
+            $response = [
+                'departments' => $departments->items(),
+                'meta' => [
+                    'current_page' => $departments->currentPage(),
+                    'per_page' => $departments->perPage(),
+                    'total' => $departments->total(),
+                    'last_page' => $departments->lastPage(),
+                ],
+                'links' => [
+                    'prev' => $departments->previousPageUrl(),
+                    'next' => $departments->nextPageUrl(),
+                ]
+            ];
+
+            if ($request->wantsJson()) {
+                return response()->json($response);
+            }
+
+            return Inertia::render('Dashboard', $response);
+        }
+
         return Inertia::render('Departments/Index', [
-            'departments' => $departments
+            'departments' => $departments->items(),
+            'meta' => [
+                'current_page' => $departments->currentPage(),
+                'per_page' => $departments->perPage(),
+                'total' => $departments->total(),
+                'last_page' => $departments->lastPage(),
+            ],
+            'links' => [
+                'prev' => $departments->previousPageUrl(),
+                'next' => $departments->nextPageUrl(),
+            ]
         ]);
     }
 
@@ -47,7 +102,11 @@ class DepartmentController extends Controller
         $department->update($validated);
         
         if ($request->wantsJson()) {
-            return response()->json(['department' => $department->load('leader')]);
+            $department->load(['leader', 'users']);
+            return response()->json([
+                'department' => $department,
+                'employees' => $department->users
+            ]);
         }
         
         return redirect()->back()->with('success', 'Département modifié avec succès');
@@ -64,9 +123,28 @@ class DepartmentController extends Controller
         return redirect()->back()->with('success', 'Département supprimé avec succès');
     }
 
-    public function users()
+    public function users(Request $request)
     {
-        $users = \App\Models\User::select('id', 'name')->orderBy('name')->get();
+        $query = \App\Models\User::query()->select('id', 'name');
+        
+        // Si un département est spécifié, filtrer les utilisateurs de ce département
+        if ($request->department_id) {
+            $query->where('department_id', $request->department_id);
+        }
+        
+        $users = $query->orderBy('name')->get();
         return response()->json(['users' => $users]);
+    }
+
+    public function show(Department $department)
+    {
+        $department->load(['leader', 'users' => function($query) {
+            $query->with('roles');
+        }]);
+        
+        return response()->json([
+            'department' => $department,
+            'employees' => $department->users
+        ]);
     }
 } 

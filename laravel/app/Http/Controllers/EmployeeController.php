@@ -15,6 +15,7 @@ class EmployeeController extends Controller
     public function index(Request $request)
     {
         $query = User::query()
+            ->with(['roles', 'department'])
             ->whereDoesntHave('roles', function($q) {
                 $q->where('name', 'admin');
             });
@@ -32,16 +33,39 @@ class EmployeeController extends Controller
         $sortDirection = $request->sort_direction ?? 'asc';
         $query->orderBy($sortField, $sortDirection);
 
-        $employees = $query->get();
+        // Pagination
+        $employees = $query->paginate(10);
         $departments = Department::all(['id', 'name']);
         $roles = Role::where('name', '!=', 'admin')->get(['id', 'name']);
 
-        return Inertia::render('Employees/Index', [
-            'employees' => $employees,
+        $response = [
+            'employees' => $employees->items(),
             'departments' => $departments,
             'roles' => $roles,
-            'filters' => $request->all(['search', 'sort_field', 'sort_direction'])
-        ]);
+            'filters' => [
+                'search' => $request->search,
+                'sort_field' => $sortField,
+                'sort_direction' => $sortDirection,
+            ],
+            'meta' => [
+                'current_page' => $employees->currentPage(),
+                'per_page' => $employees->perPage(),
+                'total' => $employees->total(),
+                'last_page' => $employees->lastPage(),
+            ],
+            'links' => [
+                'prev' => $employees->previousPageUrl(),
+                'next' => $employees->nextPageUrl(),
+            ]
+        ];
+
+        if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json($response);
+        }
+
+        return Inertia::render('Dashboard', array_merge($response, [
+            'mainContent' => 'employees'
+        ]));
     }
 
     public function store(Request $request)
@@ -50,9 +74,8 @@ class EmployeeController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:8',
-            'Salaire_base' => 'required|numeric',
-            'department_id' => 'required|exists:departments,id',
-            'role' => 'required|exists:roles,name',
+            'Salaire_base' => 'required|numeric|min:0|max:99999999.99',
+            'department_id' => 'required|exists:departments,id'
         ]);
 
         $user = User::create([
@@ -63,7 +86,14 @@ class EmployeeController extends Controller
             'department_id' => $validated['department_id']
         ]);
 
-        $user->assignRole($validated['role']);
+        $user->assignRole('employee');
+
+        if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'message' => 'Employé ajouté avec succès',
+                'user' => $user
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Employé ajouté avec succès');
     }
@@ -73,11 +103,18 @@ class EmployeeController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', Rule::unique('users')->ignore($employee->id)],
-            'Salaire_base' => 'required|numeric',
+            'Salaire_base' => 'required|numeric|min:0|max:99999999.99',
             'department_id' => 'nullable|exists:departments,id'
         ]);
 
         $employee->update($validated);
+
+        if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'message' => 'Employé modifié avec succès',
+                'user' => $employee
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Employé modifié avec succès');
     }
@@ -85,6 +122,13 @@ class EmployeeController extends Controller
     public function destroy(User $employee)
     {
         $employee->delete();
+
+        if (request()->wantsJson() || request()->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'message' => 'Employé supprimé avec succès'
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Employé supprimé avec succès');
     }
 }

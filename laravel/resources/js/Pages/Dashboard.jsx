@@ -1,54 +1,19 @@
 import { usePage, router } from '@inertiajs/react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ImportBiometricsButton from '../components/ImportBiometricsButton';
 import UserExportModal from '../components/UserExportModal';
+import Sidebar from '@/Components/Sidebar';
+import DepartmentsTable from './Departments/DepartmentsTable';
+import EmployeesTable from './Employees/EmployeesTable';
 
-const FEATURES = [
-    {
-        label: 'Gérer tous les employés',
-        permission: 'manage_employees',
-        admin: true,
-        leader: false,
-        employee: false,
-    },
-    {
-        label: 'Modifier son département',
-        permission: 'edit_department',
-        admin: true,
-        leader: false,
-        employee: false,
-    },
-    {
-        label: 'Valider les congés',
-        permission: 'validate_leaves',
-        admin: true,
-        leader: 'son_dept', // à préciser dans l'affichage
-        employee: false,
-    },
-    {
-        label: 'Importer des données biométriques',
-        permission: 'import_biometrics',
-        admin: true,
-        leader: 'son_dept',
-        employee: false,
-    },
-    {
-        label: 'Consulter son dashboard',
-        permission: 'view_dashboard',
-        admin: true,
-        leader: true,
-        employee: true,
-    },
-    {
-        label: 'Envoyer des notifications',
-        permission: 'send_notifications',
-        admin: true,
-        leader: 'son_dept',
-        employee: false,
-    },
-];
+// FEATURES constant is now in Sidebar.jsx
 
-export default function Dashboard() {
+export default function Dashboard({ 
+    departments: initialDepartments = [], 
+    employees: initialEmployees = [], 
+    meta = null, 
+    links = null 
+}) {
     const { permissions, auth } = usePage().props;
     const user = auth?.user;
     const mainRole = user?.roles?.[0]?.name || 'employee';
@@ -59,9 +24,73 @@ export default function Dashboard() {
     const [sortField, setSortField] = useState('name');
     const [sortDirection, setSortDirection] = useState('asc');
     const [showEmployees, setShowEmployees] = useState(false);
-    const [employees, setEmployees] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [mainContent, setMainContent] = useState('welcome');
+    const [currentDepartments, setCurrentDepartments] = useState(initialDepartments);
+    const [currentEmployees, setCurrentEmployees] = useState(initialEmployees);
+    const [currentMeta, setCurrentMeta] = useState(meta);
+    const [currentLinks, setCurrentLinks] = useState(links);
     const [showImportModal, setShowImportModal] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    // Avatar initials
+    const initials = user?.name
+        ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+        : 'U';
+
+    // Mettre à jour les données quand les props changent
+    useEffect(() => {
+        setCurrentDepartments(initialDepartments);
+        setCurrentEmployees(initialEmployees);
+        setCurrentMeta(meta);
+        setCurrentLinks(links);
+    }, [initialDepartments, initialEmployees, meta, links]);
+
+    // Define FEATURES here for now to pass to Sidebar, will be adjusted in Phase 2
+    // This is a temporary step. Ideally, FEATURES should live where it's most logically managed.
+    const FEATURES_DASHBOARD = [
+        {
+            label: 'Gérer tous les employés',
+            permission: 'manage_employees',
+            admin: true,
+            leader: false,
+            employee: false,
+        },
+        {
+            label: 'Modifier son département',
+            permission: 'edit_department',
+            admin: true,
+            leader: false,
+            employee: false,
+        },
+        {
+            label: 'Valider les congés',
+            permission: 'validate_leaves',
+            admin: true,
+            leader: 'son_dept',
+            employee: false,
+        },
+        {
+            label: 'Importer des données biométriques',
+            permission: 'import_biometrics',
+            admin: true,
+            leader: 'son_dept',
+            employee: false,
+        },
+        {
+            label: 'Consulter son dashboard',
+            permission: 'view_dashboard',
+            admin: true,
+            leader: true,
+            employee: true,
+        },
+        {
+            label: 'Envoyer des notifications',
+            permission: 'send_notifications',
+            admin: true,
+            leader: 'son_dept',
+            employee: false,
+        },
+    ];
 
     const handleLogout = (e) => {
         e.preventDefault();
@@ -70,16 +99,29 @@ export default function Dashboard() {
 
     const handleFeatureClick = (feature) => {
         if (!feature) return;
+        
+        setSelectedFeature(feature);
+
         if (feature.permission === 'import_biometrics') {
             setShowImportModal(true);
             return;
         }
-        if (feature.permission === 'manage_employees') {
-            setSelectedFeature(feature);
-            router.get('/employees');
-        } else if (feature.permission === 'edit_department') {
-            setSelectedFeature(feature);
-            router.get('/departments');
+        
+        switch (feature.permission) {
+            case 'edit_department':
+                setMainContent('departments');
+                if (!currentDepartments.length) {
+                    fetchDepartments();
+                }
+                break;
+            case 'manage_employees':
+                setMainContent('employees');
+                if (!currentEmployees.length) {
+                    fetchEmployees();
+                }
+                break;
+            default:
+                setMainContent('welcome');
         }
     };
 
@@ -92,20 +134,32 @@ export default function Dashboard() {
         }
     };
 
-    // Avatar initials
-    const initials = user?.name
-        ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-        : 'U';
-
     // Pour savoir si l'utilisateur a la permission
     const hasPermission = (perm) => permissions && permissions.includes(perm);
 
     const fetchEmployees = async () => {
         setLoading(true);
-        const response = await fetch('/employees?inertia=false');
-        const data = await response.json();
-        setEmployees(data.employees);
-        setLoading(false);
+        try {
+            const response = await fetch('/employees', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Erreur lors du chargement des employés');
+            }
+            
+            const data = await response.json();
+            setCurrentEmployees(data.employees);
+            setCurrentMeta(data.meta);
+            setCurrentLinks(data.links);
+        } catch (error) {
+            console.error('Erreur:', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleShowEmployees = () => {
@@ -128,6 +182,64 @@ export default function Dashboard() {
     const handleDelete = (emp) => {
         if (confirm(`Supprimer ${emp.name} ?`)) {
             router.delete(`/employees/${emp.id}`);
+        }
+    };
+
+    const fetchDepartments = async () => {
+        try {
+            const response = await fetch('/departments', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Erreur lors du chargement des départements');
+            }
+            
+            const data = await response.json();
+            setCurrentDepartments(data.departments);
+            setCurrentMeta(data.meta);
+            setCurrentLinks(data.links);
+        } catch (error) {
+            console.error('Erreur:', error);
+        }
+    };
+
+    // Render main content based on state
+    const renderMainContent = () => {
+        switch (mainContent) {
+            case 'departments':
+                return (
+                    <DepartmentsTable 
+                        departments={currentDepartments}
+                        meta={currentMeta}
+                        links={currentLinks}
+                    />
+                );
+            case 'employees':
+                return (
+                    <EmployeesTable 
+                        employees={currentEmployees}
+                        departments={currentDepartments}
+                        meta={currentMeta}
+                        links={currentLinks}
+                        filters={{
+                            search: searchTerm,
+                            sort_field: sortField,
+                            sort_direction: sortDirection
+                        }}
+                    />
+                );
+            default:
+                return (
+                    <div className="welcome-box">
+                        <h1>Bienvenue, {user?.name} !</h1>
+                        <div className="role-badge">{roleLabel}</div>
+                        <p>Vous êtes connecté en tant que <b>{roleLabel}</b>.<br />Profitez de votre espace personnalisé.</p>
+                    </div>
+                );
         }
     };
 
@@ -483,33 +595,18 @@ export default function Dashboard() {
                     </div>
                 </div>
             </nav>
-            {/* Sidebar */}
-            <aside className="sidebar">
-                <div className="user-name">{user?.name}</div>
-                <div className="role">{roleLabel}</div>
-                <ul>
-                    {permissions && permissions.length > 0 ? (
-                        permissions.map((perm) => (
-                            <li
-                                key={perm}
-                                onClick={() => handleFeatureClick(FEATURES.find(f => f.permission === perm))}
-                                className={selectedFeature?.permission === perm ? 'active' : ''}
-                            >
-                                {perm}
-                            </li>
-                        ))
-                    ) : (
-                        <li style={{ color: '#aaa' }}>Aucune permission</li>
-                    )}
-                </ul>
-            </aside>
+            {/* Sidebar - Replaced with component */}
+            <Sidebar 
+                user={user}
+                roleLabel={roleLabel}
+                permissions={permissions}
+                featuresList={FEATURES_DASHBOARD} // Pass the FEATURES from Dashboard for now
+                selectedFeature={selectedFeature}
+                onFeatureClick={handleFeatureClick}
+            />
             {/* Main Content */}
             <main className="main-content">
-                <div className="welcome-box">
-                    <h1>Bienvenue, {user?.name} !</h1>
-                    <div className="role-badge">{roleLabel}</div>
-                    <p>Vous êtes connecté en tant que <b>{roleLabel}</b>.<br />Profitez de votre espace personnalisé.</p>
-                </div>
+                {renderMainContent()}
             </main>
             <UserExportModal show={showImportModal} onClose={() => setShowImportModal(false)} />
         </div>

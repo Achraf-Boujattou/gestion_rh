@@ -193,7 +193,7 @@ export default function DepartmentsTable({ departments: initialDepartments, link
             
             const data = await res.json();
             if (data.departments) {
-                setDepartments(data.departments);
+            setDepartments(data.departments);
             }
         } catch (error) {
             console.error('Erreur de rafraîchissement:', error);

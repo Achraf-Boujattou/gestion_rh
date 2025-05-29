@@ -31,12 +31,75 @@ export default function ForgotPassword({ status }) {
                     width: 100%;
                     text-align: center;
                 }
+                .logo-container {
+                    margin-bottom: 24px;
+                    perspective: 1000px;
+                }
                 .auth-title {
                     color: #1563ff;
-                    font-size: 2em;
+                    font-size: 2.2em;
                     font-weight: bold;
-                    margin-bottom: 10px;
-                    letter-spacing: 1px;
+                    letter-spacing: 2px;
+                    position: relative;
+                    display: inline-block;
+                    animation: logoEntrance 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                    text-shadow: 2px 2px 8px rgba(21, 99, 255, 0.2);
+                }
+                .auth-title::after {
+                    content: '';
+                    position: absolute;
+                    bottom: -6px;
+                    left: 0;
+                    width: 100%;
+                    height: 3px;
+                    background: linear-gradient(90deg, #1563ff, #54a0ff);
+                    transform: scaleX(0);
+                    transform-origin: left;
+                    animation: underlineSlide 0.8s ease-out 0.8s forwards;
+                    border-radius: 2px;
+                }
+                @keyframes logoEntrance {
+                    0% {
+                        opacity: 0;
+                        transform: translateY(-40px) rotateX(30deg);
+                    }
+                    100% {
+                        opacity: 1;
+                        transform: translateY(0) rotateX(0);
+                    }
+                }
+                @keyframes underlineSlide {
+                    0% {
+                        transform: scaleX(0);
+                    }
+                    100% {
+                        transform: scaleX(1);
+                    }
+                }
+                .logo-shine {
+                    position: absolute;
+                    top: 0;
+                    left: -100%;
+                    width: 50%;
+                    height: 100%;
+                    background: linear-gradient(
+                        90deg,
+                        transparent,
+                        rgba(255, 255, 255, 0.6),
+                        transparent
+                    );
+                    animation: shine 3s infinite;
+                }
+                @keyframes shine {
+                    0% {
+                        left: -100%;
+                    }
+                    20% {
+                        left: 100%;
+                    }
+                    100% {
+                        left: 100%;
+                    }
                 }
                 .auth-subtitle {
                     font-size: 1.25em;
@@ -105,7 +168,12 @@ export default function ForgotPassword({ status }) {
                 }
             `}</style>
             <form className="auth-card" onSubmit={submit}>
-                <div className="auth-title">ONSSTA</div>
+                <div className="logo-container">
+                    <div className="auth-title">
+                        ONESSTA
+                        <div className="logo-shine"></div>
+                    </div>
+                </div>
                 <div className="auth-subtitle">Mot de passe oublié ?</div>
                 <div className="auth-desc">Entrez votre adresse e-mail pour recevoir un lien de réinitialisation.</div>
                 {status && <div style={{ color: '#1563ff', marginBottom: 12 }}>{status}</div>}

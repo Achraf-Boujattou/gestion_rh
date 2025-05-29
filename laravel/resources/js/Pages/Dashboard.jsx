@@ -261,36 +261,45 @@ export default function Dashboard({
                     box-shadow: 0 2px 20px rgba(67, 24, 255, 0.08);
                     animation: navbarFadeIn 1s;
                 }
-                @keyframes navbarFadeIn {
-                    from { opacity: 0; transform: translateY(-30px);}
-                    to { opacity: 1; transform: translateY(0);}
-                }
-                .navbar .left-section {
+                .navbar-logo {
                     display: flex;
                     align-items: center;
-                    gap: 24px;
-                }
-                .navbar .search-box {
+                    gap: 12px;
+                    font-size: 1.8em;
+                    font-weight: bold;
+                    color: #1563ff;
+                    text-decoration: none;
                     position: relative;
-                    width: 300px;
+                    padding-right: 32px;
                 }
-                .navbar .search-box input {
-                    width: 100%;
-                    padding: 10px 16px 10px 40px;
-                    border: 1px solid #E0E5F2;
-                    border-radius: 30px;
-                    font-size: 0.9em;
-                    color: #2B3674;
-                    background: #F4F7FE;
-                    transition: all 0.3s ease;
+                .navbar-logo::after {
+                    content: '';
+                    position: absolute;
+                    right: 0;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    width: 1px;
+                    height: 32px;
+                    background: #e0e5f2;
                 }
-                .navbar .search-box input:focus {
-                    outline: none;
-                    border-color: #4318FF;
-                    background: white;
-                    box-shadow: 0 0 0 3px rgba(67, 24, 255, 0.1);
+                .navbar-logo span {
+                    background: linear-gradient(135deg, #1563ff 0%, #54a0ff 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    animation: logoColorShift 8s infinite;
                 }
-                .navbar .search-box::before {
+                @keyframes logoColorShift {
+                    0%, 100% {
+                        filter: hue-rotate(0deg);
+                    }
+                    50% {
+                        filter: hue-rotate(30deg);
+                    }
+                }
+                .navbar-search {
+                    position: relative;
+                }
+                .navbar-search::before {
                     content: '';
                     position: absolute;
                     left: 16px;
@@ -301,6 +310,71 @@ export default function Dashboard({
                     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23A3AED0'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'%3E%3C/path%3E%3C/svg%3E");
                     background-size: contain;
                     background-repeat: no-repeat;
+                }
+                .navbar-actions {
+                    display: flex;
+                    align-items: center;
+                    gap: 20px;
+                }
+                .navbar-notification {
+                    position: relative;
+                    padding: 8px;
+                    border-radius: 50%;
+                    background: #f4f7fe;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                }
+                .navbar-notification:hover {
+                    background: #e9edf7;
+                    transform: translateY(-2px);
+                }
+                .navbar-notification::after {
+                    content: '';
+                    position: absolute;
+                    top: 8px;
+                    right: 8px;
+                    width: 8px;
+                    height: 8px;
+                    background: #1563ff;
+                    border-radius: 50%;
+                    border: 2px solid white;
+                    animation: pulse 2s infinite;
+                }
+                @keyframes pulse {
+                    0% {
+                        box-shadow: 0 0 0 0 rgba(21, 99, 255, 0.4);
+                    }
+                    70% {
+                        box-shadow: 0 0 0 10px rgba(21, 99, 255, 0);
+                    }
+                    100% {
+                        box-shadow: 0 0 0 0 rgba(21, 99, 255, 0);
+                    }
+                }
+                @keyframes navbarFadeIn {
+                    from { opacity: 0; transform: translateY(-30px);}
+                    to { opacity: 1; transform: translateY(0);}
+                }
+                .navbar .left-section {
+                    display: flex;
+                    align-items: center;
+                    gap: 24px;
+                }
+                .navbar .search-box {
+                    width: 100%;
+                    padding: 10px 16px 10px 40px;
+                    border: 1px solid #E0E5F2;
+                    border-radius: 30px;
+                    font-size: 0.9em;
+                    color: #2B3674;
+                    background: #F4F7FE;
+                    transition: all 0.3s ease;
+                }
+                .navbar .search-box:focus {
+                    outline: none;
+                    border-color: #1563ff;
+                    background: white;
+                    box-shadow: 0 0 0 3px rgba(21, 99, 255, 0.1);
                 }
                 .navbar .right-section {
                     display: flex;
@@ -334,13 +408,14 @@ export default function Dashboard({
                     display: flex;
                     align-items: center;
                     gap: 12px;
-                    padding: 6px;
+                    padding: 6px 12px;
                     border-radius: 30px;
                     cursor: pointer;
                     transition: all 0.2s ease;
+                    background: #F4F7FE;
                 }
                 .navbar .profile-menu:hover {
-                    background: #F4F7FE;
+                    background: #E9EDF7;
                 }
                 .navbar .avatar {
                     width: 40px;
@@ -369,13 +444,23 @@ export default function Dashboard({
                     color: #A3AED0;
                     font-size: 0.8em;
                 }
-                .navbar .profile-menu .dropdown {
+                .navbar .profile-btn {
+                    background: none;
+                    border: none;
+                    padding: 4px;
+                    cursor: pointer;
+                    color: #2B3674;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .navbar .dropdown {
                     position: absolute;
                     top: calc(100% + 10px);
                     right: 0;
                     background: white;
                     border-radius: 16px;
-                    box-shadow: 0 4px 20px rgba(67, 24, 255, 0.1);
+                    box-shadow: 0 4px 20px rgba(21, 99, 255, 0.1);
                     min-width: 200px;
                     padding: 8px;
                     opacity: 0;
@@ -383,13 +468,12 @@ export default function Dashboard({
                     transform: translateY(-10px);
                     transition: all 0.3s ease;
                 }
-                .navbar .profile-menu.open .dropdown {
+                .navbar .dropdown.open {
                     opacity: 1;
                     visibility: visible;
                     transform: translateY(0);
                 }
-                .navbar .dropdown a,
-                .navbar .dropdown button {
+                .navbar .dropdown-item {
                     display: flex;
                     align-items: center;
                     gap: 12px;
@@ -403,20 +487,18 @@ export default function Dashboard({
                     border-radius: 10px;
                     cursor: pointer;
                     transition: all 0.2s ease;
+                    text-decoration: none;
                 }
-                .navbar .dropdown a:hover,
-                .navbar .dropdown button:hover {
+                .navbar .dropdown-item:hover {
                     background: #F4F7FE;
-                    color: #4318FF;
+                    color: #1563ff;
                 }
-                .navbar .dropdown svg {
-                    width: 18px;
-                    height: 18px;
+                .navbar .dropdown-item svg {
                     color: #A3AED0;
+                    transition: color 0.2s ease;
                 }
-                .navbar .dropdown a:hover svg,
-                .navbar .dropdown button:hover svg {
-                    color: #4318FF;
+                .navbar .dropdown-item:hover svg {
+                    color: #1563ff;
                 }
                 .sidebar {
                     position: fixed;
@@ -700,12 +782,119 @@ export default function Dashboard({
                     color: white;
                 }
                 .search-box {
-                    padding: 8px 16px;
-                    border: 1px solid #ddd;
-                    border-radius: 8px;
-                    width: 300px;
-                    font-size: 14px;
-                    margin-bottom: 20px;
+                    width: 100%;
+                    padding: 10px 16px 10px 40px;
+                    border: 1px solid #E0E5F2;
+                    border-radius: 30px;
+                    font-size: 0.9em;
+                    color: #2B3674;
+                    background: #F4F7FE;
+                    transition: all 0.3s ease;
+                }
+                .search-box:focus {
+                    outline: none;
+                    border-color: #1563ff;
+                    background: white;
+                    box-shadow: 0 0 0 3px rgba(21, 99, 255, 0.1);
+                }
+                .navbar-search {
+                    position: relative;
+                }
+                .navbar-search::before {
+                    content: '';
+                    position: absolute;
+                    left: 16px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    width: 14px;
+                    height: 14px;
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23A3AED0'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'%3E%3C/path%3E%3C/svg%3E");
+                    background-size: contain;
+                    background-repeat: no-repeat;
+                }
+                .profile-menu {
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 6px 12px;
+                    border-radius: 30px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    background: #F4F7FE;
+                }
+                .profile-menu:hover {
+                    background: #E9EDF7;
+                }
+                .profile-info {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2px;
+                }
+                .profile-name {
+                    font-weight: 600;
+                    color: #2B3674;
+                    font-size: 0.95em;
+                }
+                .profile-role {
+                    color: #A3AED0;
+                    font-size: 0.8em;
+                }
+                .profile-btn {
+                    background: none;
+                    border: none;
+                    padding: 4px;
+                    cursor: pointer;
+                    color: #2B3674;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .dropdown {
+                    position: absolute;
+                    top: calc(100% + 10px);
+                    right: 0;
+                    background: white;
+                    border-radius: 16px;
+                    box-shadow: 0 4px 20px rgba(21, 99, 255, 0.1);
+                    min-width: 200px;
+                    padding: 8px;
+                    opacity: 0;
+                    visibility: hidden;
+                    transform: translateY(-10px);
+                    transition: all 0.3s ease;
+                }
+                .dropdown.open {
+                    opacity: 1;
+                    visibility: visible;
+                    transform: translateY(0);
+                }
+                .dropdown-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    width: 100%;
+                    padding: 12px 16px;
+                    border: none;
+                    background: none;
+                    color: #2B3674;
+                    font-size: 0.9em;
+                    text-align: left;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    text-decoration: none;
+                }
+                .dropdown-item:hover {
+                    background: #F4F7FE;
+                    color: #1563ff;
+                }
+                .dropdown-item svg {
+                    color: #A3AED0;
+                    transition: color 0.2s ease;
+                }
+                .dropdown-item:hover svg {
+                    color: #1563ff;
                 }
                 @media (max-width: 900px) {
                     .main-content {
@@ -717,20 +906,59 @@ export default function Dashboard({
             `}</style>
             {/* Navbar */}
             <nav className="navbar">
-                <div className={`profile-menu${profileOpen ? ' open' : ''}`} onMouseLeave={() => setProfileOpen(false)}>
-                    <span className="avatar">{initials}</span>
-                    <button
-                        className="profile-btn"
-                        onClick={() => setProfileOpen((v) => !v)}
-                        type="button"
-                    >
-                        {user?.name} &#x25BC;
-                    </button>
-                    <div className={`dropdown${profileOpen ? ' open' : ''}`}>
-                        <a href="/profile">Modifier profil</a>
-                        <form onSubmit={handleLogout}>
-                            <button type="submit">Déconnexion</button>
-                        </form>
+                <div className="navbar-logo">
+                    <span>ONESSTA</span>
+                </div>
+                <div className="navbar-search">
+                    <input
+                        type="text"
+                        placeholder="Rechercher..."
+                        className="search-box"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                <div className="navbar-actions">
+                    <div className="navbar-notification">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1563ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                    </div>
+                    <div className={`profile-menu${profileOpen ? ' open' : ''}`} onMouseLeave={() => setProfileOpen(false)}>
+                        <span className="avatar">{initials}</span>
+                        <div className="profile-info">
+                            <span className="profile-name">{user?.name}</span>
+                            <span className="profile-role">{roleLabel}</span>
+                        </div>
+                        <button
+                            className="profile-btn"
+                            onClick={() => setProfileOpen((v) => !v)}
+                            type="button"
+                        >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </button>
+                        <div className={`dropdown${profileOpen ? ' open' : ''}`}>
+                            <a href="/profile" className="dropdown-item">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                Modifier profil
+                            </a>
+                            <form onSubmit={handleLogout}>
+                                <button type="submit" className="dropdown-item">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                        <polyline points="16 17 21 12 16 7"></polyline>
+                                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                                    </svg>
+                                    Déconnexion
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </nav>

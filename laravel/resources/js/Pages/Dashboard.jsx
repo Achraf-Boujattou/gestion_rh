@@ -6,6 +6,8 @@ import Sidebar from '@/Components/Sidebar';
 import DepartmentsTable from './Departments/DepartmentsTable';
 import EmployeesTable from './Employees/EmployeesTable';
 import StatisticsView from './Dashboard/StatisticsView';
+import LeaveIndex from './Leave/Index';
+import { useForm } from '@inertiajs/react';
 
 // FEATURES constant is now in Sidebar.jsx
 
@@ -13,7 +15,8 @@ export default function Dashboard({
     departments: initialDepartments = [], 
     employees: initialEmployees = [], 
     meta = null, 
-    links = null 
+    links = null,
+    leaves = []
 }) {
     const { permissions, auth } = usePage().props;
     const user = auth?.user;
@@ -32,6 +35,12 @@ export default function Dashboard({
     const [currentLinks, setCurrentLinks] = useState(links);
     const [showImportModal, setShowImportModal] = useState(false);
     const [loading, setLoading] = useState(false);
+    const form = useForm({
+        type: '',
+        start_date: '',
+        end_date: '',
+        reason: ''
+    });
 
     // Avatar initials
     const initials = user?.name
@@ -46,9 +55,38 @@ export default function Dashboard({
         setCurrentLinks(links);
     }, [initialDepartments, initialEmployees, meta, links]);
 
+    // Ajouter cette fonction pour gérer les clics en dehors du menu
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            const profileMenu = document.querySelector('.profile-menu');
+            if (profileMenu && !profileMenu.contains(event.target)) {
+                setProfileOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
     // Define FEATURES here for now to pass to Sidebar, will be adjusted in Phase 2
-    // This is a temporary step. Ideally, FEATURES should live where it's most logically managed.
     const FEATURES_DASHBOARD = [
+        {
+            label: 'Consulter son dashboard',
+            permission: 'view_dashboard',
+            admin: true,
+            leader: true,
+            employee: true,
+        },
+        {
+            label: 'Demander un congé',
+            permission: 'request_leave',
+            admin: true,
+            leader: true,
+            employee: true,
+            priority: 1
+        },
         {
             label: 'Gérer tous les employés',
             permission: 'manage_employees',
@@ -78,13 +116,6 @@ export default function Dashboard({
             employee: false,
         },
         {
-            label: 'Consulter son dashboard',
-            permission: 'view_dashboard',
-            admin: true,
-            leader: true,
-            employee: true,
-        },
-        {
             label: 'Envoyer des notifications',
             permission: 'send_notifications',
             admin: true,
@@ -92,6 +123,19 @@ export default function Dashboard({
             employee: false,
         },
     ];
+
+    // Filtrer les fonctionnalités selon le rôle de l'utilisateur
+    const getFilteredFeatures = () => {
+        const userRole = user?.roles?.[0]?.name || 'employee';
+        return FEATURES_DASHBOARD
+            .filter(feature => {
+                if (userRole === 'admin') return feature.admin;
+                if (userRole === 'leader') return feature.leader;
+                if (userRole === 'employee') return feature.employee;
+                return false;
+            })
+            .sort((a, b) => (b.priority || 0) - (a.priority || 0));
+    };
 
     const handleLogout = (e) => {
         e.preventDefault();
@@ -109,6 +153,12 @@ export default function Dashboard({
                 break;
             case 'Consulter son dashboard':
                 setMainContent('statistics');
+                break;
+            case 'Demander un congé':
+                setMainContent('leave-request');
+                break;
+            case 'Valider les congés':
+                setMainContent('validate-leaves');
                 break;
             default:
                 setMainContent('welcome');
@@ -141,14 +191,14 @@ export default function Dashboard({
                 throw new Error('Erreur lors du chargement des employés');
             }
             
-            const data = await response.json();
+        const data = await response.json();
             setCurrentEmployees(data.employees);
             setCurrentMeta(data.meta);
             setCurrentLinks(data.links);
         } catch (error) {
             console.error('Erreur:', error);
         } finally {
-            setLoading(false);
+        setLoading(false);
         }
     };
 
@@ -197,6 +247,169 @@ export default function Dashboard({
         }
     };
 
+    const handleLeaveSubmit = (e) => {
+        e.preventDefault();
+        form.post('/leaves', {
+            onSuccess: () => {
+                // Réinitialiser le formulaire
+                form.reset();
+                // Afficher un message de succès
+                alert('Votre demande de congé a été soumise avec succès!');
+            },
+        });
+    };
+
+    const renderLeaveRequestForm = () => {
+        return (
+            <div className="leave-request-container">
+                <style>{`
+                    .leave-request-container {
+                        background: white;
+                        border-radius: 18px;
+                        padding: 2rem;
+                        box-shadow: 0 4px 32px rgba(80,80,180,0.1);
+                        max-width: 800px;
+                        width: 100%;
+                        margin: 0 auto;
+                    }
+                    .leave-request-title {
+                        color: #1563ff;
+                        font-size: 1.8rem;
+                        font-weight: 600;
+                        margin-bottom: 1.5rem;
+                        display: flex;
+                        align-items: center;
+                        gap: 0.75rem;
+                    }
+                    .leave-request-form {
+                        display: grid;
+                        gap: 1.5rem;
+                    }
+                    .form-group {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 0.5rem;
+                    }
+                    .form-group label {
+                        font-weight: 500;
+                        color: #2B3674;
+                        font-size: 1rem;
+                    }
+                    .form-group select, 
+                    .form-group input, 
+                    .form-group textarea {
+                        padding: 0.75rem;
+                        border: 1px solid #E0E5F2;
+                        border-radius: 8px;
+                        font-size: 1rem;
+                        transition: all 0.3s ease;
+                        background: white;
+                    }
+                    .form-group select:focus, 
+                    .form-group input:focus, 
+                    .form-group textarea:focus {
+                        outline: none;
+                        border-color: #1563ff;
+                        box-shadow: 0 0 0 3px rgba(21, 99, 255, 0.1);
+                    }
+                    .submit-button {
+                        background: #1563ff;
+                        color: white;
+                        border: none;
+                        padding: 1rem 2rem;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        font-size: 1rem;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        margin-top: 1rem;
+                    }
+                    .submit-button:hover {
+                        background: #0047cc;
+                        transform: translateY(-2px);
+                    }
+                    .submit-button:disabled {
+                        background: #ccc;
+                        cursor: not-allowed;
+                        transform: none;
+                    }
+                    .error-message {
+                        color: #dc2626;
+                        font-size: 0.875rem;
+                        margin-top: 0.25rem;
+                    }
+                `}</style>
+                <div className="leave-request-title">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M8 2v4"></path>
+                        <path d="M16 2v4"></path>
+                        <rect x="3" y="6" width="18" height="16" rx="2"></rect>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                    </svg>
+                    Demande de Congé
+                </div>
+                <form onSubmit={handleLeaveSubmit} className="leave-request-form">
+                    <div className="form-group">
+                        <label>Type de Congé</label>
+                        <select
+                            value={form.data.type}
+                            onChange={e => form.setData('type', e.target.value)}
+                            required
+                        >
+                            <option value="">Sélectionnez un type</option>
+                            <option value="Congé Maladie">Congé Maladie</option>
+                            <option value="Congé Annuel">Congé Annuel</option>
+                            <option value="Congé Spécial">Congé Spécial</option>
+                        </select>
+                        {form.errors.type && <div className="error-message">{form.errors.type}</div>}
+                    </div>
+                    
+                    <div className="form-group">
+                        <label>Date de Début</label>
+                        <input
+                            type="date"
+                            value={form.data.start_date}
+                            onChange={e => form.setData('start_date', e.target.value)}
+                            required
+                        />
+                        {form.errors.start_date && <div className="error-message">{form.errors.start_date}</div>}
+                    </div>
+                    
+                    <div className="form-group">
+                        <label>Date de Fin</label>
+                        <input
+                            type="date"
+                            value={form.data.end_date}
+                            onChange={e => form.setData('end_date', e.target.value)}
+                            required
+                        />
+                        {form.errors.end_date && <div className="error-message">{form.errors.end_date}</div>}
+                    </div>
+                    
+                    <div className="form-group">
+                        <label>Motif</label>
+                        <textarea
+                            rows="4"
+                            value={form.data.reason}
+                            onChange={e => form.setData('reason', e.target.value)}
+                            placeholder="Décrivez la raison de votre demande..."
+                            required
+                        ></textarea>
+                        {form.errors.reason && <div className="error-message">{form.errors.reason}</div>}
+                    </div>
+                    
+                    <button 
+                        type="submit" 
+                        className="submit-button"
+                        disabled={form.processing}
+                    >
+                        {form.processing ? 'Envoi en cours...' : 'Soumettre la Demande'}
+                    </button>
+                </form>
+            </div>
+        );
+    };
+
     // Render main content based on state
     const renderMainContent = () => {
         switch (mainContent) {
@@ -224,6 +437,10 @@ export default function Dashboard({
                 );
             case 'statistics':
                 return <StatisticsView />;
+            case 'leave-request':
+                return renderLeaveRequestForm();
+            case 'validate-leaves':
+                return <LeaveIndex auth={{ user }} leaves={leaves} />;
             default:
                 return (
                     <div className="welcome-box">
@@ -413,6 +630,7 @@ export default function Dashboard({
                     cursor: pointer;
                     transition: all 0.2s ease;
                     background: #F4F7FE;
+                    z-index: 1000;
                 }
                 .navbar .profile-menu:hover {
                     background: #E9EDF7;
@@ -467,6 +685,7 @@ export default function Dashboard({
                     visibility: hidden;
                     transform: translateY(-10px);
                     transition: all 0.3s ease;
+                    z-index: 1001;
                 }
                 .navbar .dropdown.open {
                     opacity: 1;
@@ -636,8 +855,8 @@ export default function Dashboard({
                     padding: 90px 40px 40px;
                     min-height: 100vh;
                     display: flex;
-                    align-items: flex-start;
-                    justify-content: flex-start;
+                    align-items: center;
+                    justify-content: center;
                     animation: fadeInMain 1.2s;
                     width: calc(100% - 280px);
                     box-sizing: border-box;
@@ -651,10 +870,14 @@ export default function Dashboard({
                     border-radius: 18px;
                     box-shadow: 0 4px 32px rgba(80,80,180,0.10);
                     padding: 48px 36px;
-                    min-width: 320px;
+                    width: 100%;
                     max-width: 600px;
                     text-align: center;
                     animation: fadeInWelcome 1.5s;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
                 }
                 @keyframes fadeInWelcome {
                     from { opacity: 0; transform: translateY(30px);}
@@ -665,6 +888,8 @@ export default function Dashboard({
                     margin-bottom: 12px;
                     color: #1563ff;
                     letter-spacing: 1px;
+                    width: 100%;
+                    text-align: center;
                 }
                 .welcome-box .role-badge {
                     display: inline-block;
@@ -822,6 +1047,7 @@ export default function Dashboard({
                     cursor: pointer;
                     transition: all 0.2s ease;
                     background: #F4F7FE;
+                    z-index: 1000;
                 }
                 .profile-menu:hover {
                     background: #E9EDF7;
@@ -863,6 +1089,7 @@ export default function Dashboard({
                     visibility: hidden;
                     transform: translateY(-10px);
                     transition: all 0.3s ease;
+                    z-index: 1001;
                 }
                 .dropdown.open {
                     opacity: 1;
@@ -925,31 +1152,42 @@ export default function Dashboard({
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                         </svg>
                     </div>
-                    <div className={`profile-menu${profileOpen ? ' open' : ''}`} onMouseLeave={() => setProfileOpen(false)}>
-                        <span className="avatar">{initials}</span>
+                <div className={`profile-menu${profileOpen ? ' open' : ''}`}>
+                    <span className="avatar">{initials}</span>
                         <div className="profile-info">
                             <span className="profile-name">{user?.name}</span>
                             <span className="profile-role">{roleLabel}</span>
                         </div>
-                        <button
-                            className="profile-btn"
-                            onClick={() => setProfileOpen((v) => !v)}
-                            type="button"
-                        >
+                    <button
+                        className="profile-btn"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setProfileOpen(!profileOpen);
+                        }}
+                        type="button"
+                    >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M6 9l6 6 6-6"/>
                             </svg>
-                        </button>
-                        <div className={`dropdown${profileOpen ? ' open' : ''}`}>
-                            <a href="/profile" className="dropdown-item">
+                    </button>
+                    <div className={`dropdown${profileOpen ? ' open' : ''}`}>
+                            <a 
+                                href="/profile" 
+                                className="dropdown-item"
+                                onClick={(e) => e.stopPropagation()}
+                            >
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                     <circle cx="12" cy="7" r="4"></circle>
                                 </svg>
                                 Modifier profil
                             </a>
-                            <form onSubmit={handleLogout}>
-                                <button type="submit" className="dropdown-item">
+                        <form onSubmit={handleLogout}>
+                                <button 
+                                    type="submit" 
+                                    className="dropdown-item"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                                         <polyline points="16 17 21 12 16 7"></polyline>
@@ -957,7 +1195,7 @@ export default function Dashboard({
                                     </svg>
                                     Déconnexion
                                 </button>
-                            </form>
+                        </form>
                         </div>
                     </div>
                 </div>
@@ -966,8 +1204,7 @@ export default function Dashboard({
             <Sidebar 
                 user={user}
                 roleLabel={roleLabel}
-                permissions={permissions}
-                featuresList={FEATURES_DASHBOARD} // Pass the FEATURES from Dashboard for now
+                permissions={[...permissions, 'request_leave', 'view_dashboard']}
                 selectedFeature={selectedFeature}
                 onFeatureClick={handleFeatureClick}
             />

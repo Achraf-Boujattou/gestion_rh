@@ -3,6 +3,7 @@
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\LeaveController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -28,10 +29,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
             })
             ->get();
         
+        // Récupérer les congés selon le rôle
+        $leavesQuery = \App\Models\Leave::with(['user', 'user.department'])
+            ->orderBy('created_at', 'desc');
+
+        if ($user->hasRole('leader')) {
+            $leavesQuery->whereHas('user', function($q) use ($user) {
+                $q->where('department_id', $user->department_id);
+            });
+        }
+
+        $leaves = $leavesQuery->get();
+        
         return Inertia::render('Dashboard', [
             'permissions' => $user->getAllPermissions()->pluck('name'),
             'departments' => $departments,
             'employees' => $employees,
+            'leaves' => $leaves,
             'meta' => [
                 'current_page' => 1,
                 'per_page' => 10,
@@ -130,6 +144,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::post('/leaves', [LeaveController::class, 'store'])->name('leaves.store');
+    
+    // Modifier cette partie pour les routes de gestion des congés
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/leaves/manage', [LeaveController::class, 'index'])
+            ->middleware('can:validate_leaves')
+            ->name('leaves.index');
+        Route::post('/leaves/{leave}/status', [LeaveController::class, 'updateStatus'])
+            ->middleware('can:validate_leaves')
+            ->name('leaves.update-status');
+    });
 });
 
 require __DIR__.'/auth.php';

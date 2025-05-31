@@ -13,6 +13,15 @@ return new class extends Migration
     {
         Schema::create('leaves', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('type');
+            $table->date('start_date');
+            $table->date('end_date');
+            $table->text('reason');
+            $table->string('status')->default('pending');
+            $table->text('response_comment')->nullable();
+            $table->foreignId('approved_by')->nullable()->constrained('users');
+            $table->timestamp('approved_at')->nullable();
             $table->timestamps();
         });
     }

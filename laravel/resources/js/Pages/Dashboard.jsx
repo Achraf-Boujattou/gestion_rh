@@ -19,6 +19,7 @@ export default function Dashboard({
     links = null,
     leaves = []
 }) {
+    const { darkMode, toggleDarkMode } = useTheme();
     const { permissions, auth } = usePage().props;
     const { darkMode, toggleTheme } = useTheme();
     const user = auth?.user;
@@ -457,11 +458,15 @@ export default function Dashboard({
     return (
         <div className={`dashboard-auth-root ${darkMode ? 'dark' : ''}`}>
             <style>{`
-                body { background: #eaf0fa; }
                 .dashboard-auth-root {
                     min-height: 100vh;
                     background: linear-gradient(135deg, #eaf0fa 60%, #fff 100%);
                     font-family: 'Segoe UI', Arial, sans-serif;
+                    transition: all 0.3s ease;
+                }
+                .dashboard-auth-root.dark {
+                    background: linear-gradient(135deg, #1a1f36 60%, #111827 100%);
+                    color: #fff;
                 }
                 .navbar {
                     width: 100%;
@@ -479,6 +484,62 @@ export default function Dashboard({
                     z-index: 100;
                     box-shadow: 0 2px 20px rgba(67, 24, 255, 0.08);
                     animation: navbarFadeIn 1s;
+                    transition: all 0.3s ease;
+                }
+                .dark .navbar {
+                    background: #1e293b;
+                    color: #fff;
+                    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+                }
+                .theme-toggle {
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    padding: 8px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #2B3674;
+                    transition: all 0.3s ease;
+                }
+                .dark .theme-toggle {
+                    color: #fff;
+                }
+                .theme-toggle:hover {
+                    background: rgba(79, 70, 229, 0.1);
+                }
+                .dark .theme-toggle:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                }
+                .navbar-logo span {
+                    background: linear-gradient(135deg, #1563ff 0%, #54a0ff 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                }
+                .dark .navbar-logo span {
+                    background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                }
+                .dark .profile-menu {
+                    background: #2d3748;
+                }
+                .dark .profile-name {
+                    color: #fff;
+                }
+                .dark .profile-role {
+                    color: #cbd5e0;
+                }
+                .dark .dropdown {
+                    background: #2d3748;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                }
+                .dark .dropdown-item {
+                    color: #fff;
+                }
+                .dark .dropdown-item:hover {
+                    background: rgba(255, 255, 255, 0.1);
                 }
                 .navbar-logo {
                     display: flex;
@@ -500,20 +561,6 @@ export default function Dashboard({
                     width: 1px;
                     height: 32px;
                     background: #e0e5f2;
-                }
-                .navbar-logo span {
-                    background: linear-gradient(135deg, #1563ff 0%, #54a0ff 100%);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                    animation: logoColorShift 8s infinite;
-                }
-                @keyframes logoColorShift {
-                    0%, 100% {
-                        filter: hue-rotate(0deg);
-                    }
-                    50% {
-                        filter: hue-rotate(30deg);
-                    }
                 }
                 .navbar-search {
                     position: relative;
@@ -1232,16 +1279,8 @@ export default function Dashboard({
                 <div className="navbar-logo">
                     <span>ONESSTA</span>
                 </div>
-                <div className="navbar-search">
-                    <input
-                        type="text"
-                        placeholder="Rechercher..."
-                        className="search-box"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
                 <div className="navbar-actions">
+<<<<<<< HEAD
                     <button
                         className="theme-toggle"
                         onClick={toggleTheme}
@@ -1249,6 +1288,15 @@ export default function Dashboard({
                     >
                         {darkMode ? (
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#54a0ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+=======
+                    <button 
+                        className="theme-toggle" 
+                        onClick={toggleDarkMode}
+                        title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                    >
+                        {darkMode ? (
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+>>>>>>> ad028a9bdf55b89b5bbc742d4232ba4343b39752
                                 <circle cx="12" cy="12" r="5"/>
                                 <line x1="12" y1="1" x2="12" y2="3"/>
                                 <line x1="12" y1="21" x2="12" y2="23"/>
@@ -1260,61 +1308,72 @@ export default function Dashboard({
                                 <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
                             </svg>
                         ) : (
+<<<<<<< HEAD
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1563ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+=======
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+>>>>>>> ad028a9bdf55b89b5bbc742d4232ba4343b39752
                                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
                             </svg>
                         )}
                     </button>
                     <div className="navbar-notification">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1563ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                         </svg>
                     </div>
                     <div className={`profile-menu${profileOpen ? ' open' : ''}`}>
+<<<<<<< HEAD
                     <span className="avatar">{initials}</span>
+=======
+                        <span className="avatar">{initials}</span>
+>>>>>>> ad028a9bdf55b89b5bbc742d4232ba4343b39752
                         <div className="profile-info">
                             <span className="profile-name">{user?.name}</span>
                             <span className="profile-role">{roleLabel}</span>
                         </div>
+<<<<<<< HEAD
                     <button
                         className="profile-btn"
+=======
+                        <button
+                            className="profile-btn"
+>>>>>>> ad028a9bdf55b89b5bbc742d4232ba4343b39752
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setProfileOpen(!profileOpen);
                             }}
+<<<<<<< HEAD
                         type="button"
                     >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+=======
+                            type="button"
+                        >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+>>>>>>> ad028a9bdf55b89b5bbc742d4232ba4343b39752
                                 <path d="M6 9l6 6 6-6"/>
                             </svg>
-                    </button>
-                    <div className={`dropdown${profileOpen ? ' open' : ''}`}>
-                            <a 
-                                href="/profile" 
-                                className="dropdown-item"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        </button>
+                        <div className={`dropdown${profileOpen ? ' open' : ''}`}>
+                            <a href="/profile" className="dropdown-item">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                     <circle cx="12" cy="7" r="4"></circle>
                                 </svg>
                                 Modifier profil
                             </a>
-                        <form onSubmit={handleLogout}>
-                                <button 
-                                    type="submit" 
-                                    className="dropdown-item"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <form onSubmit={handleLogout}>
+                                <button type="submit" className="dropdown-item">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                                         <polyline points="16 17 21 12 16 7"></polyline>
                                         <line x1="21" y1="12" x2="9" y2="12"></line>
                                     </svg>
                                     Déconnexion
                                 </button>
-                        </form>
+                            </form>
                         </div>
                     </div>
                 </div>

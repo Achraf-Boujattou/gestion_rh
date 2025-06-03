@@ -4,6 +4,7 @@ const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
     const [darkMode, setDarkMode] = useState(() => {
+<<<<<<< HEAD
         // Check if there's a saved theme preference in localStorage
         const savedTheme = localStorage.getItem('theme');
         return savedTheme === 'dark';
@@ -12,11 +13,22 @@ export function ThemeProvider({ children }) {
     useEffect(() => {
         // Update localStorage and document class when theme changes
         localStorage.setItem('theme', darkMode ? 'dark' : 'light');
+=======
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('darkMode');
+            return saved ? JSON.parse(saved) : false;
+        }
+        return false;
+    });
+
+    useEffect(() => {
+>>>>>>> ad028a9bdf55b89b5bbc742d4232ba4343b39752
         if (darkMode) {
             document.documentElement.classList.add('dark');
         } else {
             document.documentElement.classList.remove('dark');
         }
+<<<<<<< HEAD
     }, [darkMode]);
 
     const toggleTheme = () => {
@@ -25,6 +37,17 @@ export function ThemeProvider({ children }) {
 
     return (
         <ThemeContext.Provider value={{ darkMode, toggleTheme }}>
+=======
+        localStorage.setItem('darkMode', JSON.stringify(darkMode));
+    }, [darkMode]);
+
+    const toggleDarkMode = () => {
+        setDarkMode(prev => !prev);
+    };
+
+    return (
+        <ThemeContext.Provider value={{ darkMode, toggleDarkMode }}>
+>>>>>>> ad028a9bdf55b89b5bbc742d4232ba4343b39752
             {children}
         </ThemeContext.Provider>
     );

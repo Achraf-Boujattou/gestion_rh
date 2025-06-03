@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Leave;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Notification;
 
 class LeaveController extends Controller
 {
@@ -73,17 +74,24 @@ class LeaveController extends Controller
     public function updateStatus(Request $request, Leave $leave)
     {
         $validated = $request->validate([
-            'status' => 'required|in:approved,rejected',
-            'response_comment' => 'nullable|string'
+            'status' => 'required|in:approved,rejected'
         ]);
 
         $leave->update([
-            'status' => $validated['status'],
-            'response_comment' => $validated['response_comment'],
-            'approved_by' => auth()->id(),
-            'approved_at' => now()
+            'status' => $validated['status']
         ]);
 
-        return redirect()->back()->with('success', 'Leave request status updated successfully.');
+        // Create notification for the leave owner
+        Notification::create([
+            'user_id' => $leave->user_id,
+            'leave_id' => $leave->id,
+            'type' => 'leave_' . $validated['status'],
+            'title' => 'Demande de congé ' . ($validated['status'] === 'approved' ? 'approuvée' : 'rejetée'),
+            'message' => 'Votre demande de congé du ' . $leave->start_date->format('d/m/Y') . 
+                        ' au ' . $leave->end_date->format('d/m/Y') . 
+                        ' a été ' . ($validated['status'] === 'approved' ? 'approuvée' : 'rejetée') . '.'
+        ]);
+
+        return back()->with('success', 'Statut du congé mis à jour avec succès.');
     }
 }

@@ -4,6 +4,8 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LeaveController;
+use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -156,6 +158,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('can:validate_leaves')
             ->name('leaves.update-status');
     });
+
+    // Notification routes
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::post('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
+});
+
+Route::middleware('guest')->group(function () {
+    Route::get('forgot-password', function () {
+        return Inertia::render('Auth/ForgotPassword');
+    })->name('password.request');
+
+    Route::post('forgot-password/verify', [PasswordResetController::class, 'verifyEmail'])
+        ->name('password.verify');
+
+    Route::post('forgot-password/update', [PasswordResetController::class, 'update'])
+        ->name('password.update.new');
 });
 
 require __DIR__.'/auth.php';

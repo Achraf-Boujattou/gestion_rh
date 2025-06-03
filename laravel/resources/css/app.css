@@ -2,6 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Dark mode transitions */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Dark mode styles */
+.dark {
+    color-scheme: dark;
+}
+
+.dark body {
+    background-color: #0f172a;
+    color: #f1f5f9;
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+    background-color: #1e293b;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+.dark table {
+    background-color: #1e293b;
+    color: #f1f5f9;
+}
+
+.dark th {
+    background-color: #334155;
+}
+
+.dark td {
+    border-color: #334155;
+}
+
+.dark tr:hover td {
+    background-color: #2d3748;
+}
+
+.dark button:not(.theme-toggle) {
+    background-color: #2d3748;
+    color: #f1f5f9;
+}
+
+.dark button:hover:not(.theme-toggle) {
+    background-color: #374151;
+}
+
+.dark .card,
+.dark .modal {
+    background-color: #1e293b;
+    border-color: #334155;
+}
+
 /* Styles communs pour les composants */
 .modern-container {
     padding: 24px;

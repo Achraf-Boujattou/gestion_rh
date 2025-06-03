@@ -8,6 +8,7 @@ import EmployeesTable from './Employees/EmployeesTable';
 import StatisticsView from './Dashboard/StatisticsView';
 import LeaveIndex from './Leave/Index';
 import { useForm } from '@inertiajs/react';
+import { useTheme } from '@/Context/ThemeContext';
 
 // FEATURES constant is now in Sidebar.jsx
 
@@ -19,6 +20,7 @@ export default function Dashboard({
     leaves = []
 }) {
     const { permissions, auth } = usePage().props;
+    const { darkMode, toggleTheme } = useTheme();
     const user = auth?.user;
     const mainRole = user?.roles?.[0]?.name || 'employee';
     const roleLabel = mainRole.charAt(0).toUpperCase() + mainRole.slice(1);
@@ -143,7 +145,7 @@ export default function Dashboard({
     };
 
     const handleFeatureClick = (feature) => {
-        setSelectedFeature(feature);
+            setSelectedFeature(feature);
         switch (feature.label) {
             case 'Gérer tous les employés':
                 setMainContent('employees');
@@ -260,7 +262,7 @@ export default function Dashboard({
     };
 
     const renderLeaveRequestForm = () => {
-        return (
+    return (
             <div className="leave-request-container">
                 <style>{`
                     .leave-request-container {
@@ -453,7 +455,7 @@ export default function Dashboard({
     };
 
     return (
-        <div className="dashboard-auth-root">
+        <div className={`dashboard-auth-root ${darkMode ? 'dark' : ''}`}>
             <style>{`
                 body { background: #eaf0fa; }
                 .dashboard-auth-root {
@@ -1130,6 +1132,100 @@ export default function Dashboard({
                         padding: 90px 20px 40px;
                     }
                 }
+                /* Dark mode styles */
+                .dark {
+                    background: #1a1f36;
+                    color: #e0e7ff;
+                }
+                
+                .dark .navbar {
+                    background: #242b42;
+                    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+                }
+                
+                .dark .navbar-logo {
+                    color: #54a0ff;
+                }
+                
+                .dark .profile-menu {
+                    background: #2d3555;
+                }
+                
+                .dark .profile-name {
+                    color: #e0e7ff;
+                }
+                
+                .dark .profile-role {
+                    color: #8b9cc7;
+                }
+                
+                .dark .dropdown {
+                    background: #242b42;
+                }
+                
+                .dark .dropdown-item {
+                    color: #e0e7ff;
+                }
+                
+                .dark .dropdown-item:hover {
+                    background: #2d3555;
+                }
+                
+                .dark .welcome-box {
+                    background: #242b42;
+                    box-shadow: 0 4px 32px rgba(0, 0, 0, 0.2);
+                }
+                
+                .dark .welcome-box h1 {
+                    color: #54a0ff;
+                }
+                
+                .dark .welcome-box p {
+                    color: #8b9cc7;
+                }
+                
+                .dark .sidebar {
+                    background: #242b42;
+                    border-right-color: rgba(255, 255, 255, 0.1);
+                }
+                
+                .dark .sidebar .user-name {
+                    color: #e0e7ff;
+                }
+                
+                .dark .sidebar li {
+                    color: #8b9cc7;
+                }
+                
+                .dark .sidebar li:hover {
+                    background: rgba(84, 160, 255, 0.1);
+                }
+                
+                /* Theme toggle button styles */
+                .theme-toggle {
+                    padding: 8px;
+                    border-radius: 50%;
+                    background: #f4f7fe;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    margin-right: 16px;
+                    border: none;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                
+                .dark .theme-toggle {
+                    background: #2d3555;
+                }
+                
+                .theme-toggle:hover {
+                    transform: translateY(-2px);
+                }
+                
+                .dark .theme-toggle:hover {
+                    background: #3a4674;
+                }
             `}</style>
             {/* Navbar */}
             <nav className="navbar">
@@ -1146,13 +1242,36 @@ export default function Dashboard({
                     />
                 </div>
                 <div className="navbar-actions">
+                    <button
+                        className="theme-toggle"
+                        onClick={toggleTheme}
+                        title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+                    >
+                        {darkMode ? (
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#54a0ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="5"/>
+                                <line x1="12" y1="1" x2="12" y2="3"/>
+                                <line x1="12" y1="21" x2="12" y2="23"/>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                                <line x1="1" y1="12" x2="3" y2="12"/>
+                                <line x1="21" y1="12" x2="23" y2="12"/>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                            </svg>
+                        ) : (
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1563ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                            </svg>
+                        )}
+                    </button>
                     <div className="navbar-notification">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1563ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                         </svg>
                     </div>
-                <div className={`profile-menu${profileOpen ? ' open' : ''}`}>
+                    <div className={`profile-menu${profileOpen ? ' open' : ''}`}>
                     <span className="avatar">{initials}</span>
                         <div className="profile-info">
                             <span className="profile-name">{user?.name}</span>
@@ -1160,10 +1279,10 @@ export default function Dashboard({
                         </div>
                     <button
                         className="profile-btn"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setProfileOpen(!profileOpen);
-                        }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setProfileOpen(!profileOpen);
+                            }}
                         type="button"
                     >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

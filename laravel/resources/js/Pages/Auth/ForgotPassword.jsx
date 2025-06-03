@@ -1,14 +1,25 @@
 import { useForm, Link } from '@inertiajs/react';
-import React from 'react';
+import React, { useState } from 'react';
 
 export default function ForgotPassword({ status }) {
     const { data, setData, post, processing, errors } = useForm({
         email: '',
+        password: '',
+        password_confirmation: '',
     });
+    const [showPassword, setShowPassword] = useState(false);
+    const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+    const [showPasswordFields, setShowPasswordFields] = useState(false);
 
     const submit = (e) => {
         e.preventDefault();
-        post(route('password.email'));
+        if (!showPasswordFields) {
+            // First step: validate email
+            setShowPasswordFields(true);
+        } else {
+            // Second step: reset password using POST to the correct endpoint
+            post(route('password.request.update'));
+        }
     };
 
     return (
@@ -166,6 +177,20 @@ export default function ForgotPassword({ status }) {
                 .auth-link:hover {
                     text-decoration: underline;
                 }
+                .input-group {
+                    position: relative;
+                }
+                .show-password {
+                    position: absolute;
+                    right: 18px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background: none;
+                    border: none;
+                    color: #1563ff;
+                    cursor: pointer;
+                    font-size: 0.98em;
+                }
             `}</style>
             <form className="auth-card" onSubmit={submit}>
                 <div className="logo-container">
@@ -174,9 +199,14 @@ export default function ForgotPassword({ status }) {
                         <div className="logo-shine"></div>
                     </div>
                 </div>
-                <div className="auth-subtitle">Mot de passe oublié ?</div>
-                <div className="auth-desc">Entrez votre adresse e-mail pour recevoir un lien de réinitialisation.</div>
+                <div className="auth-subtitle">Réinitialiser le mot de passe</div>
+                <div className="auth-desc">
+                    {!showPasswordFields 
+                        ? "Entrez votre adresse e-mail pour réinitialiser votre mot de passe."
+                        : "Choisissez votre nouveau mot de passe."}
+                </div>
                 {status && <div style={{ color: '#1563ff', marginBottom: 12 }}>{status}</div>}
+                
                 <label className="auth-label" htmlFor="email">E-mail</label>
                 <input
                     id="email"
@@ -187,9 +217,61 @@ export default function ForgotPassword({ status }) {
                     autoComplete="username"
                     onChange={e => setData('email', e.target.value)}
                     required
+                    disabled={showPasswordFields}
                 />
                 {errors.email && <div style={{ color: 'red', marginBottom: 8 }}>{errors.email}</div>}
-                <button className="auth-btn" disabled={processing}>Envoyer le lien</button>
+
+                {showPasswordFields && (
+                    <>
+                        <label className="auth-label" htmlFor="password">Nouveau mot de passe</label>
+                        <div className="input-group">
+                            <input
+                                id="password"
+                                type={showPassword ? 'text' : 'password'}
+                                name="password"
+                                value={data.password}
+                                className="auth-input"
+                                autoComplete="new-password"
+                                onChange={e => setData('password', e.target.value)}
+                                required
+                            />
+                            <button 
+                                type="button" 
+                                className="show-password" 
+                                onClick={() => setShowPassword(v => !v)}
+                            >
+                                {showPassword ? 'Masquer' : 'Afficher'}
+                            </button>
+                        </div>
+                        {errors.password && <div style={{ color: 'red', marginBottom: 8 }}>{errors.password}</div>}
+
+                        <label className="auth-label" htmlFor="password_confirmation">Confirmer le mot de passe</label>
+                        <div className="input-group">
+                            <input
+                                id="password_confirmation"
+                                type={showPasswordConfirm ? 'text' : 'password'}
+                                name="password_confirmation"
+                                value={data.password_confirmation}
+                                className="auth-input"
+                                autoComplete="new-password"
+                                onChange={e => setData('password_confirmation', e.target.value)}
+                                required
+                            />
+                            <button 
+                                type="button" 
+                                className="show-password" 
+                                onClick={() => setShowPasswordConfirm(v => !v)}
+                            >
+                                {showPasswordConfirm ? 'Masquer' : 'Afficher'}
+                            </button>
+                        </div>
+                        {errors.password_confirmation && <div style={{ color: 'red', marginBottom: 8 }}>{errors.password_confirmation}</div>}
+                    </>
+                )}
+
+                <button className="auth-btn" disabled={processing}>
+                    {!showPasswordFields ? 'Réinitialiser' : 'Confirmer'}
+                </button>
                 <div className="auth-footer">
                     <Link href={route('login')} className="auth-link">Retour à la connexion</Link>
                 </div>

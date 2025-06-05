@@ -10,6 +10,7 @@ import {
     Tooltip,
     Legend,
     ArcElement,
+    Filler
 } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
 
@@ -22,66 +23,173 @@ ChartJS.register(
     Title,
     Tooltip,
     Legend,
-    ArcElement
+    ArcElement,
+    Filler
 );
 
-export default function StatisticsView() {
-    // Options pour le graphique de présence quotidienne
-    const attendanceOptions = {
+export default function StatisticsView({ statistics }) {
+    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+
+    // Options pour le graphique des congés
+    const leaveOptions = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
             legend: {
-                display: false
+                display: true,
+                position: 'top',
+                align: 'end',
+                labels: {
+                    usePointStyle: true,
+                    padding: 20,
+                    font: {
+                        size: 11,
+                        weight: '500'
+                    },
+                    color: '#64748b'
+                }
             },
             title: {
                 display: false
             },
+            tooltip: {
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                titleColor: '#1e293b',
+                bodyColor: '#1e293b',
+                borderColor: 'rgba(67, 24, 255, 0.1)',
+                borderWidth: 1,
+                padding: 10,
+                boxPadding: 5,
+                usePointStyle: true,
+                callbacks: {
+                    title: (context) => `${months[context[0].dataIndex]} ${new Date().getFullYear()}`,
+                    label: (context) => {
+                        if (context.dataset.label === 'Demandes de congés') {
+                            return `${context.parsed.y} demandes`;
+                        }
+                        return `${context.parsed.y} nouveaux employés`;
+                    }
+                }
+            }
         },
         scales: {
             y: {
                 beginAtZero: true,
-                max: 100,
                 grid: {
                     display: true,
-                    color: '#f0f0f0',
+                    color: 'rgba(67, 24, 255, 0.05)',
+                    drawBorder: false,
                 },
                 ticks: {
-                    callback: value => value + '%'
+                    stepSize: 1,
+                    padding: 10,
+                    color: '#64748b',
+                    font: {
+                        size: 11,
+                        weight: '500'
+                    }
+                },
+                border: {
+                    display: false
                 }
             },
             x: {
                 grid: {
+                    display: false,
+                    drawBorder: false
+                },
+                ticks: {
+                    color: '#64748b',
+                    font: {
+                        size: 11,
+                        weight: '500'
+                    },
+                    padding: 10
+                },
+                border: {
                     display: false
                 }
             }
         },
         elements: {
             line: {
-                tension: 0.4
+                tension: 0.4,
+                borderWidth: 2,
+                fill: true
             },
             point: {
-                radius: 2
+                radius: 0,
+                hitRadius: 8,
+                hoverRadius: 4,
             }
+        },
+        interaction: {
+            intersect: false,
+            mode: 'index'
+        },
+        animation: {
+            duration: 1500,
+            easing: 'easeInOutQuart'
         }
     };
 
-    // Données pour le graphique de présence
-    const attendanceData = {
-        labels: ['01 Aug', '02 Aug', '03 Aug', '04 Aug', '07 Aug', '08 Aug', '09 Aug', '10 Aug', '11 Aug', '14 Aug', '15 Aug', '16 Aug'],
+    // Données pour le graphique des congés
+    const leaveData = {
+        labels: months,
         datasets: [
             {
-                label: 'Taux de présence',
-                data: [65, 70, 65, 75, 91, 70, 75, 40, 65, 70, 60, 70],
+                label: 'Demandes de congés',
+                data: statistics.leaveStats.monthly_data,
                 borderColor: '#4318FF',
-                backgroundColor: 'rgba(67, 24, 255, 0.1)',
+                backgroundColor: (context) => {
+                    const chart = context.chart;
+                    const { ctx, chartArea } = chart;
+                    if (!chartArea) return null;
+                    
+                    const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                    gradient.addColorStop(0, 'rgba(67, 24, 255, 0.2)');
+                    gradient.addColorStop(1, 'rgba(67, 24, 255, 0)');
+                    return gradient;
+                },
                 fill: true,
+                pointBackgroundColor: '#4318FF',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: '#4318FF',
+                pointHoverBorderWidth: 2,
+                pointHoverRadius: 6,
+                order: 2
             },
+            {
+                label: 'Nouveaux employés',
+                data: statistics.leaveStats.monthly_employees,
+                borderColor: '#05CD99',
+                backgroundColor: (context) => {
+                    const chart = context.chart;
+                    const { ctx, chartArea } = chart;
+                    if (!chartArea) return null;
+                    
+                    const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                    gradient.addColorStop(0, 'rgba(5, 205, 153, 0.2)');
+                    gradient.addColorStop(1, 'rgba(5, 205, 153, 0)');
+                    return gradient;
+                },
+                fill: true,
+                pointBackgroundColor: '#05CD99',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: '#05CD99',
+                pointHoverBorderWidth: 2,
+                pointHoverRadius: 6,
+                order: 1
+            }
         ],
     };
 
-    // Options pour le graphique hebdomadaire
-    const weeklyOptions = {
+    // Options pour le graphique des départements
+    const departmentOptions = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
@@ -90,6 +198,11 @@ export default function StatisticsView() {
             },
             title: {
                 display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: (context) => `${context.parsed.y} employés`
+                }
             }
         },
         scales: {
@@ -100,7 +213,7 @@ export default function StatisticsView() {
                     color: '#f0f0f0',
                 },
                 ticks: {
-                    callback: value => value + '%'
+                    stepSize: 1
                 }
             },
             x: {
@@ -111,16 +224,13 @@ export default function StatisticsView() {
         }
     };
 
-    // Données pour le graphique hebdomadaire
-    const weeklyData = {
-        labels: ['Sept', 'Fr', 'Weekend', 'Lundi', 'Jeu'],
+    // Données pour le graphique des départements
+    const departmentData = {
+        labels: statistics.departmentStats.labels,
         datasets: [
             {
-                data: [35, 50, 86, 50, 35],
-                backgroundColor: (context) => {
-                    const index = context.dataIndex;
-                    return index === 2 ? '#4318FF' : '#E9EDF7';
-                },
+                data: statistics.departmentStats.data,
+                backgroundColor: '#4318FF',
                 borderRadius: 6,
                 barThickness: 20,
             },
@@ -144,8 +254,10 @@ export default function StatisticsView() {
                 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
-                            <div style={{ fontSize: '2.5em', fontWeight: '600', marginBottom: '5px', color: '#2B3674' }}>452</div>
-                            <div style={{ fontSize: '0.9em', color: '#A3AED0' }}>Total Employees</div>
+                            <div style={{ fontSize: '2.5em', fontWeight: '600', marginBottom: '5px', color: '#2B3674' }}>
+                                {statistics.totalEmployees}
+                            </div>
+                            <div style={{ fontSize: '0.9em', color: '#A3AED0' }}>Total Employés</div>
                         </div>
                         <div style={{ 
                             backgroundColor: '#F4F7FE',
@@ -169,7 +281,7 @@ export default function StatisticsView() {
                         alignItems: 'center',
                         gap: '5px'
                     }}>
-                        <span>+2 new employees</span>
+                        <span>{statistics.departmentsCount} départements</span>
                     </div>
                 </div>
 
@@ -181,8 +293,10 @@ export default function StatisticsView() {
                 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
-                            <div style={{ fontSize: '2.5em', fontWeight: '600', marginBottom: '5px', color: '#2B3674' }}>360</div>
-                            <div style={{ fontSize: '0.9em', color: '#A3AED0' }}>On Time</div>
+                            <div style={{ fontSize: '2.5em', fontWeight: '600', marginBottom: '5px', color: '#2B3674' }}>
+                                {statistics.leaveStats.active}
+                            </div>
+                            <div style={{ fontSize: '0.9em', color: '#A3AED0' }}>Congés en cours</div>
                         </div>
                         <div style={{ 
                             backgroundColor: '#F4F7FE',
@@ -206,7 +320,7 @@ export default function StatisticsView() {
                         alignItems: 'center',
                         gap: '5px'
                     }}>
-                        <span>-1.0% than yesterday</span>
+                        <span>{((statistics.leaveStats.active / statistics.totalEmployees) * 100).toFixed(1)}% des employés</span>
                     </div>
                 </div>
 
@@ -218,8 +332,10 @@ export default function StatisticsView() {
                 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
-                            <div style={{ fontSize: '2.5em', fontWeight: '600', marginBottom: '5px', color: '#2B3674' }}>30</div>
-                            <div style={{ fontSize: '0.9em', color: '#A3AED0' }}>Absent</div>
+                            <div style={{ fontSize: '2.5em', fontWeight: '600', marginBottom: '5px', color: '#2B3674' }}>
+                                {statistics.leaveStats.pending}
+                            </div>
+                            <div style={{ fontSize: '0.9em', color: '#A3AED0' }}>Demandes en attente</div>
                         </div>
                         <div style={{ 
                             backgroundColor: '#F4F7FE',
@@ -242,177 +358,47 @@ export default function StatisticsView() {
                         alignItems: 'center',
                         gap: '5px'
                     }}>
-                        <span>+2% than yesterday</span>
+                        <span>Requiert une action</span>
                     </div>
                 </div>
             </div>
 
             {/* Graphiques */}
-            <div className="charts-grid" style={{
-                display: 'grid',
-                gridTemplateColumns: '2fr 1fr',
-                gap: '20px',
-                marginBottom: '20px'
-            }}>
-                {/* Graphique de présence */}
-                <div className="chart-container" style={{
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div style={{ 
                     background: 'white',
                     padding: '20px',
                     borderRadius: '20px',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
                 }}>
-                    <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
+                    <h3 style={{ 
+                        marginBottom: '20px', 
+                        color: '#2B3674', 
+                        fontSize: '1.1em',
+                        display: 'flex',
                         alignItems: 'center',
-                        marginBottom: '20px'
+                        gap: '8px'
                     }}>
-                        <h3 style={{ margin: 0, color: '#2B3674', fontSize: '1.1em' }}>Attendance Comparison Chart</h3>
-                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                            <button style={{
-                                background: '#4318FF',
-                                color: 'white',
-                                border: 'none',
-                                padding: '5px 15px',
-                                borderRadius: '10px',
-                                fontSize: '0.9em'
-                            }}>Daily</button>
-                            <button style={{
-                                background: 'transparent',
-                                color: '#A3AED0',
-                                border: 'none',
-                                padding: '5px 15px',
-                                fontSize: '0.9em'
-                            }}>Weekly</button>
-                            <button style={{
-                                background: 'transparent',
-                                color: '#A3AED0',
-                                border: 'none',
-                                padding: '5px 15px',
-                                fontSize: '0.9em'
-                            }}>Monthly</button>
-                        </div>
-                    </div>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 2v4M16 2v4M3 10h18M3 8c0-1.1.9-2 2-2h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" stroke="#2B3674" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        Évolution mensuelle des effectifs et congés
+                    </h3>
                     <div style={{ height: '300px' }}>
-                        <Line options={attendanceOptions} data={attendanceData} />
+                        <Line options={leaveOptions} data={leaveData} />
                     </div>
                 </div>
 
-                {/* Graphique hebdomadaire */}
-                <div className="chart-container" style={{
+                <div style={{ 
                     background: 'white',
                     padding: '20px',
                     borderRadius: '20px',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
                 }}>
-                    <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center',
-                        marginBottom: '20px'
-                    }}>
-                        <h3 style={{ margin: 0, color: '#2B3674', fontSize: '1.1em' }}>Weekly Attendance</h3>
-                    </div>
+                    <h3 style={{ marginBottom: '20px', color: '#2B3674', fontSize: '1.1em' }}>Employés par département</h3>
                     <div style={{ height: '300px' }}>
-                        <Bar options={weeklyOptions} data={weeklyData} />
+                        <Bar options={departmentOptions} data={departmentData} />
                     </div>
-                </div>
-            </div>
-
-            {/* Tableau des présences */}
-            <div className="attendance-table" style={{
-                background: 'white',
-                padding: '20px',
-                borderRadius: '20px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-            }}>
-                <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center',
-                    marginBottom: '20px'
-                }}>
-                    <h3 style={{ margin: 0, color: '#2B3674', fontSize: '1.1em' }}>Attendance Overview</h3>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <button style={{
-                            background: 'white',
-                            border: '1px solid #E0E5F2',
-                            padding: '8px',
-                            borderRadius: '10px',
-                            cursor: 'pointer'
-                        }}>
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <path d="M6.5 3.5H12M12 3.5V9M12 3.5L4 11.5" stroke="#A3AED0" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                        </button>
-                        <button style={{
-                            background: '#4318FF',
-                            color: 'white',
-                            border: 'none',
-                            padding: '8px 16px',
-                            borderRadius: '10px',
-                            fontSize: '0.9em'
-                        }}>View Attendance</button>
-                    </div>
-                </div>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                        <tr style={{ borderBottom: '1px solid #E0E5F2' }}>
-                            <th style={{ padding: '12px 8px', textAlign: 'left', color: '#A3AED0', fontWeight: '500', fontSize: '0.9em' }}>ID</th>
-                            <th style={{ padding: '12px 8px', textAlign: 'left', color: '#A3AED0', fontWeight: '500', fontSize: '0.9em' }}>Name</th>
-                            <th style={{ padding: '12px 8px', textAlign: 'left', color: '#A3AED0', fontWeight: '500', fontSize: '0.9em' }}>Department</th>
-                            <th style={{ padding: '12px 8px', textAlign: 'left', color: '#A3AED0', fontWeight: '500', fontSize: '0.9em' }}>Status</th>
-                            <th style={{ padding: '12px 8px', textAlign: 'left', color: '#A3AED0', fontWeight: '500', fontSize: '0.9em' }}>Time In</th>
-                            <th style={{ padding: '12px 8px', textAlign: 'left', color: '#A3AED0', fontWeight: '500', fontSize: '0.9em' }}>Time Out</th>
-                            <th style={{ padding: '12px 8px', textAlign: 'left', color: '#A3AED0', fontWeight: '500', fontSize: '0.9em' }}>Total Hours</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td style={{ padding: '16px 8px', color: '#2B3674' }}>25411421</td>
-                            <td style={{ padding: '16px 8px', color: '#2B3674' }}>Ahmed Rashdan</td>
-                            <td style={{ padding: '16px 8px', color: '#2B3674' }}>IT Department</td>
-                            <td style={{ padding: '16px 8px' }}>
-                                <span style={{ 
-                                    backgroundColor: 'rgba(5, 205, 153, 0.1)', 
-                                    color: '#05CD99',
-                                    padding: '4px 8px',
-                                    borderRadius: '10px',
-                                    fontSize: '0.85em'
-                                }}>Work from office</span>
-                            </td>
-                            <td style={{ padding: '16px 8px', color: '#2B3674' }}>09:00</td>
-                            <td style={{ padding: '16px 8px', color: '#2B3674' }}>18:00</td>
-                            <td style={{ padding: '16px 8px', color: '#2B3674' }}>10h 2m</td>
-                        </tr>
-                        <tr>
-                            <td style={{ padding: '16px 8px', color: '#2B3674' }}>25411422</td>
-                            <td style={{ padding: '16px 8px', color: '#2B3674' }}>Sarah Lambert</td>
-                            <td style={{ padding: '16px 8px', color: '#2B3674' }}>HR</td>
-                            <td style={{ padding: '16px 8px' }}>
-                                <span style={{ 
-                                    backgroundColor: 'rgba(255, 0, 0, 0.1)', 
-                                    color: '#FF0000',
-                                    padding: '4px 8px',
-                                    borderRadius: '10px',
-                                    fontSize: '0.85em'
-                                }}>Absent</span>
-                            </td>
-                            <td style={{ padding: '16px 8px', color: '#2B3674' }}>-</td>
-                            <td style={{ padding: '16px 8px', color: '#2B3674' }}>-</td>
-                            <td style={{ padding: '16px 8px', color: '#2B3674' }}>0m</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div style={{ 
-                    marginTop: '20px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    color: '#A3AED0',
-                    fontSize: '0.9em'
-                }}>
-                    <span>Page 1 of 100</span>
                 </div>
             </div>
         </div>

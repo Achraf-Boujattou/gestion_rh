@@ -6,6 +6,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -22,44 +24,7 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // Dashboard (accessible à tous les utilisateurs authentifiés)
-    Route::get('/dashboard', function () {
-        $user = auth()->user();
-        $departments = \App\Models\Department::with('leader')->get();
-        $employees = \App\Models\User::with(['roles', 'department'])
-            ->whereDoesntHave('roles', function($q) {
-                $q->where('name', 'admin');
-            })
-            ->get();
-        
-        // Récupérer les congés selon le rôle
-        $leavesQuery = \App\Models\Leave::with(['user', 'user.department'])
-            ->orderBy('created_at', 'desc');
-
-        if ($user->hasRole('leader')) {
-            $leavesQuery->whereHas('user', function($q) use ($user) {
-                $q->where('department_id', $user->department_id);
-            });
-        }
-
-        $leaves = $leavesQuery->get();
-        
-        return Inertia::render('Dashboard', [
-            'permissions' => $user->getAllPermissions()->pluck('name'),
-            'departments' => $departments,
-            'employees' => $employees,
-            'leaves' => $leaves,
-            'meta' => [
-                'current_page' => 1,
-                'per_page' => 10,
-                'total' => $employees->count(),
-                'last_page' => ceil($employees->count() / 10)
-            ],
-            'links' => [
-                'prev' => null,
-                'next' => null
-            ]
-        ]);
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // =========================
     // ADMIN
@@ -174,8 +139,11 @@ Route::middleware('guest')->group(function () {
     Route::post('forgot-password/verify', [PasswordResetController::class, 'verifyEmail'])
         ->name('password.verify');
 
-    Route::post('forgot-password/update', [PasswordResetController::class, 'update'])
-        ->name('password.update.new');
+    Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
+        ->name('password.reset');
+
+    Route::post('reset-password', [NewPasswordController::class, 'store'])
+        ->name('password.store');
 });
 
 require __DIR__.'/auth.php';

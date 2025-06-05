@@ -167,7 +167,7 @@ export default function DepartmentsTable({ departments: initialDepartments, link
                 throw new Error(errorMsg);
             }
 
-            const data = await response.json();
+            await response.json();
             setShowForm(false);
             await refreshDepartments();
             toast.success(isEdit ? 'Département modifié avec succès' : 'Département créé avec succès');

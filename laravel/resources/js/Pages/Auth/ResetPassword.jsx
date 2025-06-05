@@ -1,183 +1,175 @@
-import { useForm, Link } from '@inertiajs/react';
-import React, { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
+import { Head, useForm } from '@inertiajs/react';
 import GuestLayout from '@/Layouts/GuestLayout';
 
 export default function ResetPassword({ token, email }) {
-    const { data, setData, post, processing, errors } = useForm({
-        token: token || '',
-        email: email || '',
+    const { data, setData, post, processing, errors, reset } = useForm({
+        token: token,
+        email: email,
         password: '',
         password_confirmation: '',
     });
+
+    const [passwordStrength, setPasswordStrength] = useState(0);
     const [showPassword, setShowPassword] = useState(false);
-    const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+
+    const checkPasswordStrength = (password) => {
+        let strength = 0;
+        if (password.length >= 8) strength += 1;
+        if (password.match(/[A-Z]/)) strength += 1;
+        if (password.match(/[a-z]/)) strength += 1;
+        if (password.match(/[0-9]/)) strength += 1;
+        if (password.match(/[^A-Za-z0-9]/)) strength += 1;
+        return strength;
+    };
+
+    const getStrengthColor = () => {
+        if (passwordStrength <= 2) return 'bg-red-500';
+        if (passwordStrength <= 3) return 'bg-yellow-500';
+        return 'bg-green-500';
+    };
+
+    const getStrengthText = () => {
+        if (passwordStrength <= 2) return 'Faible';
+        if (passwordStrength <= 3) return 'Moyen';
+        return 'Fort';
+    };
+
+    useEffect(() => {
+        return () => {
+            reset('password', 'password_confirmation');
+        };
+    }, []);
+
+    const handlePasswordChange = (e) => {
+        const newPassword = e.target.value;
+        setData('password', newPassword);
+        setPasswordStrength(checkPasswordStrength(newPassword));
+    };
 
     const submit = (e) => {
         e.preventDefault();
-        post(route('password.update'));
+        post(route('password.store'));
     };
 
     return (
         <GuestLayout>
-            <Head title="Reset Password" />
-            <div className="auth-bg">
-                <style>{`
-                    .auth-bg {
-                        min-height: 100vh;
-                        background: linear-gradient(135deg, #eaf0fa 60%, #fff 100%);
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                    }
-                    .auth-card {
-                        background: #fff;
-                        border-radius: 18px;
-                        box-shadow: 0 4px 32px rgba(80,80,180,0.10);
-                        padding: 38px 32px 32px 32px;
-                        min-width: 340px;
-                        max-width: 400px;
-                        width: 100%;
-                        text-align: center;
-                    }
-                    .auth-title {
-                        color: #1563ff;
-                        font-size: 2em;
-                        font-weight: bold;
-                        margin-bottom: 10px;
-                        letter-spacing: 1px;
-                    }
-                    .auth-subtitle {
-                        font-size: 1.25em;
-                        font-weight: 600;
-                        margin-bottom: 6px;
-                    }
-                    .auth-desc {
-                        color: #555;
-                        font-size: 1em;
-                        margin-bottom: 22px;
-                    }
-                    .auth-label {
-                        display: block;
-                        text-align: left;
-                        margin-bottom: 6px;
-                        font-weight: 500;
-                    }
-                    .auth-input {
-                        width: 100%;
-                        padding: 12px 14px;
-                        border-radius: 10px;
-                        border: 1px solid #e0e7ff;
-                        background: #f4f7ff;
-                        margin-bottom: 16px;
-                        font-size: 1em;
-                        transition: border 0.2s;
-                    }
-                    .auth-input:focus {
-                        border: 1.5px solid #1563ff;
-                        outline: none;
-                    }
-                    .auth-btn {
-                        width: 100%;
-                        background: #1563ff;
-                        color: #fff;
-                        border: none;
-                        border-radius: 10px;
-                        padding: 12px 0;
-                        font-size: 1.1em;
-                        font-weight: bold;
-                        cursor: pointer;
-                        margin-top: 8px;
-                        margin-bottom: 10px;
-                        box-shadow: 0 2px 8px #1563ff22;
-                        transition: background 0.18s, box-shadow 0.18s;
-                    }
-                    .auth-btn:hover {
-                        background: #0039a6;
-                        box-shadow: 0 4px 16px #1563ff33;
-                    }
-                    .auth-footer {
-                        margin-top: 18px;
-                        color: #888;
-                        font-size: 0.98em;
-                    }
-                    .auth-footer .auth-link {
-                        font-weight: 600;
-                    }
-                    .auth-link {
-                        color: #1563ff;
-                        text-decoration: none;
-                        font-size: 0.98em;
-                    }
-                    .auth-link:hover {
-                        text-decoration: underline;
-                    }
-                    .show-password {
-                        position: absolute;
-                        right: 18px;
-                        top: 50%;
-                        transform: translateY(-50%);
-                        background: none;
-                        border: none;
-                        color: #1563ff;
-                        cursor: pointer;
-                        font-size: 0.98em;
-                    }
-                    .input-group {
-                        position: relative;
-                    }
-                `}</style>
-                <form className="auth-card" onSubmit={submit}>
-                    <div className="auth-title">ONSSTA</div>
-                    <div className="auth-subtitle">Réinitialiser le mot de passe</div>
-                    <div className="auth-desc">Choisissez un nouveau mot de passe pour votre compte.</div>
-                    <label className="auth-label" htmlFor="email">E-mail</label>
+            <Head title="Réinitialiser le mot de passe" />
+
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg">
+                    <div className="text-center">
+                        <h1 className="text-4xl font-bold text-blue-600 mb-2">ONESSTA</h1>
+                        <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                            Réinitialiser le mot de passe
+                        </h2>
+                        <p className="text-sm text-gray-600 mb-4">
+                            Pour votre sécurité, veuillez créer un mot de passe fort qui :
+                            <ul className="list-disc text-left mt-2 ml-4">
+                                <li>Contient au moins 8 caractères</li>
+                                <li>Inclut des lettres majuscules et minuscules</li>
+                                <li>Contient des chiffres</li>
+                                <li>Inclut des caractères spéciaux</li>
+                            </ul>
+                        </p>
+                    </div>
+
+                    <form onSubmit={submit} className="space-y-6">
+                        <div>
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                                Email
+                            </label>
                     <input
                         id="email"
                         type="email"
-                        name="email"
                         value={data.email}
-                        className="auth-input"
-                        autoComplete="username"
-                        onChange={e => setData('email', e.target.value)}
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                onChange={(e) => setData('email', e.target.value)}
                         required
-                    />
-                    {errors.email && <div style={{ color: 'red', marginBottom: 8 }}>{errors.email}</div>}
-                    <label className="auth-label" htmlFor="password">Nouveau mot de passe</label>
-                    <div className="input-group">
+                                disabled
+                            />
+                            {errors.email && (
+                                <p className="mt-2 text-sm text-red-600">
+                                    {errors.email}
+                                </p>
+                            )}
+                        </div>
+
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                                Nouveau mot de passe
+                            </label>
+                            <div className="relative">
                         <input
                         id="password"
-                            type={showPassword ? 'text' : 'password'}
-                        name="password"
+                                    type={showPassword ? "text" : "password"}
                         value={data.password}
-                            className="auth-input"
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    onChange={handlePasswordChange}
+                                    required
                         autoComplete="new-password"
-                            onChange={e => setData('password', e.target.value)}
-                            required
-                    />
-                        <button type="button" className="show-password" onClick={() => setShowPassword(v => !v)}>{showPassword ? 'Hide' : 'Show'}</button>
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                >
+                                    {showPassword ? 'Masquer' : 'Afficher'}
+                                </button>
+                            </div>
+                            {data.password && (
+                                <div className="mt-2">
+                                    <div className="flex items-center">
+                                        <div className="flex-1 h-2 bg-gray-200 rounded">
+                                            <div
+                                                className={`h-full rounded ${getStrengthColor()}`}
+                                                style={{ width: `${(passwordStrength / 5) * 100}%` }}
+                                            ></div>
+                                        </div>
+                                        <span className="ml-2 text-sm text-gray-600">
+                                            {getStrengthText()}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                            {errors.password && (
+                                <p className="mt-2 text-sm text-red-600">
+                                    {errors.password}
+                                </p>
+                            )}
                 </div>
-                    {errors.password && <div style={{ color: 'red', marginBottom: 8 }}>{errors.password}</div>}
-                    <label className="auth-label" htmlFor="password_confirmation">Confirmer le mot de passe</label>
-                    <div className="input-group">
+
+                        <div>
+                            <label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700">
+                                Confirmer le mot de passe
+                            </label>
+                            <div className="relative">
                         <input
                         id="password_confirmation"
-                            type={showPasswordConfirm ? 'text' : 'password'}
-                        name="password_confirmation"
+                                    type={showPassword ? "text" : "password"}
                         value={data.password_confirmation}
-                            className="auth-input"
+                                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    onChange={(e) => setData('password_confirmation', e.target.value)}
+                                    required
                         autoComplete="new-password"
-                            onChange={e => setData('password_confirmation', e.target.value)}
-                            required
-                        />
-                        <button type="button" className="show-password" onClick={() => setShowPasswordConfirm(v => !v)}>{showPasswordConfirm ? 'Hide' : 'Show'}</button>
+                                />
+                            </div>
+                            {errors.password_confirmation && (
+                                <p className="mt-2 text-sm text-red-600">
+                                    {errors.password_confirmation}
+                                </p>
+                            )}
                 </div>
-                    {errors.password_confirmation && <div style={{ color: 'red', marginBottom: 8 }}>{errors.password_confirmation}</div>}
-                    <button className="auth-btn" disabled={processing}>Réinitialiser</button>
-                    <div className="auth-footer">
-                        <Link href={route('login')} className="auth-link">Retour à la connexion</Link>
+
+                        <button
+                            type="submit"
+                            disabled={processing || passwordStrength < 3}
+                            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {processing ? 'Réinitialisation...' : 'Réinitialiser le mot de passe'}
+                        </button>
+                    </form>
                 </div>
-            </form>
             </div>
         </GuestLayout>
     );

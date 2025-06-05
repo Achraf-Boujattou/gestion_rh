@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Department;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class DepartmentController extends Controller
 {
@@ -15,13 +16,7 @@ class DepartmentController extends Controller
         // Recherche
         if ($request->search) {
             $searchTerm = $request->search;
-            $query->where(function($q) use ($searchTerm) {
-                $q->where('name', 'like', "%{$searchTerm}%")
-                  ->orWhere('description', 'like', "%{$searchTerm}%")
-                  ->orWhereHas('leader', function($q) use ($searchTerm) {
-                      $q->where('name', 'like', "%{$searchTerm}%");
-                  });
-            });
+            $query->where('name', 'like', "%{$searchTerm}%");
         }
 
         // Tri
@@ -78,18 +73,38 @@ class DepartmentController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'leader_id' => 'nullable|exists:users,id',
-        ]);
-        $department = Department::create($validated);
-        
-        if ($request->wantsJson()) {
-            return response()->json(['department' => $department->load('leader')], 201);
+        Log::info('Début de la méthode store');
+        Log::info('Données reçues:', $request->all());
+
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'leader_id' => 'nullable|exists:users,id',
+            ]);
+            
+            Log::info('Données validées:', $validated);
+            
+            $department = Department::create($validated);
+            Log::info('Département créé:', $department->toArray());
+            
+            if ($request->wantsJson()) {
+                return response()->json(['department' => $department->load('leader')], 201);
+            }
+            
+            return redirect()->back()->with('success', 'Département créé avec succès');
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la création du département:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            if ($request->wantsJson()) {
+                return response()->json(['error' => $e->getMessage()], 500);
+            }
+            
+            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
         }
-        
-        return redirect()->back()->with('success', 'Département créé avec succès');
     }
 
     public function update(Request $request, Department $department)
@@ -102,10 +117,10 @@ class DepartmentController extends Controller
         $department->update($validated);
         
         if ($request->wantsJson()) {
-            $department->load(['leader', 'users']);
+            $department->load(['leader', 'employees']);
             return response()->json([
                 'department' => $department,
-                'employees' => $department->users
+                'employees' => $department->employees
             ]);
         }
         
@@ -138,13 +153,13 @@ class DepartmentController extends Controller
 
     public function show(Department $department)
     {
-        $department->load(['leader', 'users' => function($query) {
+        $department->load(['leader', 'employees' => function($query) {
             $query->with('roles');
         }]);
         
         return response()->json([
             'department' => $department,
-            'employees' => $department->users
+            'employees' => $department->employees
         ]);
     }
 } 

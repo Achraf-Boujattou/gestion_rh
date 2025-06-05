@@ -15,12 +15,18 @@ class Department extends Model
         'leader_id',
     ];
 
+    /**
+     * Get the leader of the department.
+     */
     public function leader()
     {
         return $this->belongsTo(User::class, 'leader_id');
     }
 
-    public function users()
+    /**
+     * Get the employees in the department.
+     */
+    public function employees()
     {
         return $this->hasMany(User::class);
     }

@@ -17,11 +17,11 @@ export default function Dashboard({
     employees: initialEmployees = [], 
     meta = null, 
     links = null,
-    leaves = []
+    leaves = [],
+    statistics = {}
 }) {
-    const { darkMode, toggleDarkMode } = useTheme();
-    const { permissions, auth } = usePage().props;
     const { darkMode, toggleTheme } = useTheme();
+    const { permissions, auth } = usePage().props;
     const user = auth?.user;
     const mainRole = user?.roles?.[0]?.name || 'employee';
     const roleLabel = mainRole.charAt(0).toUpperCase() + mainRole.slice(1);
@@ -439,7 +439,7 @@ export default function Dashboard({
                     />
                 );
             case 'statistics':
-                return <StatisticsView />;
+                return <StatisticsView statistics={statistics} />;
             case 'leave-request':
                 return renderLeaveRequestForm();
             case 'validate-leaves':
@@ -1280,7 +1280,6 @@ export default function Dashboard({
                     <span>ONESSTA</span>
                 </div>
                 <div className="navbar-actions">
-<<<<<<< HEAD
                     <button
                         className="theme-toggle"
                         onClick={toggleTheme}
@@ -1288,15 +1287,6 @@ export default function Dashboard({
                     >
                         {darkMode ? (
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#54a0ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-=======
-                    <button 
-                        className="theme-toggle" 
-                        onClick={toggleDarkMode}
-                        title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                    >
-                        {darkMode ? (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
->>>>>>> ad028a9bdf55b89b5bbc742d4232ba4343b39752
                                 <circle cx="12" cy="12" r="5"/>
                                 <line x1="12" y1="1" x2="12" y2="3"/>
                                 <line x1="12" y1="21" x2="12" y2="23"/>
@@ -1308,11 +1298,7 @@ export default function Dashboard({
                                 <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
                             </svg>
                         ) : (
-<<<<<<< HEAD
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1563ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-=======
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
->>>>>>> ad028a9bdf55b89b5bbc742d4232ba4343b39752
                                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
                             </svg>
                         )}
@@ -1324,35 +1310,20 @@ export default function Dashboard({
                         </svg>
                     </div>
                     <div className={`profile-menu${profileOpen ? ' open' : ''}`}>
-<<<<<<< HEAD
-                    <span className="avatar">{initials}</span>
-=======
                         <span className="avatar">{initials}</span>
->>>>>>> ad028a9bdf55b89b5bbc742d4232ba4343b39752
                         <div className="profile-info">
                             <span className="profile-name">{user?.name}</span>
                             <span className="profile-role">{roleLabel}</span>
                         </div>
-<<<<<<< HEAD
-                    <button
-                        className="profile-btn"
-=======
                         <button
                             className="profile-btn"
->>>>>>> ad028a9bdf55b89b5bbc742d4232ba4343b39752
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setProfileOpen(!profileOpen);
                             }}
-<<<<<<< HEAD
-                        type="button"
-                    >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-=======
                             type="button"
                         >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
->>>>>>> ad028a9bdf55b89b5bbc742d4232ba4343b39752
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M6 9l6 6 6-6"/>
                             </svg>
                         </button>

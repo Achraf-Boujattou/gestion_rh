@@ -1,3 +1,4 @@
+//DepartemetsTable.jsx
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
@@ -20,6 +21,11 @@ export default function DepartmentsTable({ departments: initialDepartments, link
     useEffect(() => {
         setDepartments(initialDepartments);
     }, [initialDepartments]);
+
+    useEffect(() => {
+        console.log("Données initiales (props):", initialDepartments);
+        console.log("State departments:", departments);
+    }, [initialDepartments, departments]);
 
     const fetchUsers = async (departmentId = null) => {
         try {
@@ -167,7 +173,6 @@ export default function DepartmentsTable({ departments: initialDepartments, link
                 throw new Error(errorMsg);
             }
 
-            await response.json();
             setShowForm(false);
             await refreshDepartments();
             toast.success(isEdit ? 'Département modifié avec succès' : 'Département créé avec succès');
@@ -193,7 +198,7 @@ export default function DepartmentsTable({ departments: initialDepartments, link
             
             const data = await res.json();
             if (data.departments) {
-            setDepartments(data.departments);
+                setDepartments(data.departments);
             }
         } catch (error) {
             console.error('Erreur de rafraîchissement:', error);
@@ -242,7 +247,6 @@ export default function DepartmentsTable({ departments: initialDepartments, link
 
     const performSearch = async (value) => {
         if (value.trim() === '') {
-            // Si la recherche est vide, on réinitialise avec les données initiales
             setDepartments(initialDepartments);
             return;
         }
@@ -266,7 +270,6 @@ export default function DepartmentsTable({ departments: initialDepartments, link
         } catch (error) {
             console.error('Erreur de recherche:', error);
             toast.error('Erreur lors de la recherche des départements');
-            // En cas d'erreur, on garde les données actuelles
         } finally {
             setIsSearching(false);
         }
@@ -539,7 +542,28 @@ export default function DepartmentsTable({ departments: initialDepartments, link
                         <tr key={dept.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                             <td style={{ padding: '1rem', color: '#374151' }}>{dept.name}</td>
                             <td style={{ padding: '1rem', color: '#374151' }}>{dept.description || '-'}</td>
-                            <td style={{ padding: '1rem', color: '#374151' }}>{dept.leader ? dept.leader.name : 'Non assigné'}</td>
+                            <td style={{ padding: '1rem', color: '#374151' }}>
+                                {dept.leader && dept.leader.name ? (
+                                    <span style={{
+                                        backgroundColor: '#EEF2FF',
+                                        color: '#4F46E5',
+                                        padding: '0.25rem 0.75rem',
+                                        borderRadius: '9999px',
+                                        fontSize: '0.875rem',
+                                        fontWeight: '500',
+                                        display: 'inline-block'
+                                    }}>
+                                        {dept.leader.name}
+                                    </span>
+                                ) : (
+                                    <span style={{
+                                        color: '#9CA3AF',
+                                        fontSize: '0.875rem'
+                                    }}>
+                                        Non assigné
+                                    </span>
+                                )}
+                            </td>
                             <td style={{ padding: '1rem', whiteSpace: 'nowrap' }}>
                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                                     <button
@@ -584,34 +608,6 @@ export default function DepartmentsTable({ departments: initialDepartments, link
             </table>
 
             {renderPagination()}
-
-            {showEmployees && selectedDepartmentEmployees.length > 0 && (
-                <div className="fade-in" style={{ marginTop: '2rem' }}>
-                    <h2 className="modern-title" style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>
-                        Employés du département
-                    </h2>
-                    <table className="modern-table">
-                        <thead>
-                            <tr>
-                                <th>Nom</th>
-                                <th>Email</th>
-                                <th>Salaire de base</th>
-                                <th>Rôle</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {selectedDepartmentEmployees.map((employee) => (
-                                <tr key={employee.id}>
-                                    <td>{employee.name}</td>
-                                    <td>{employee.email}</td>
-                                    <td>{employee.Salaire_base} €</td>
-                                    <td>{employee.roles && employee.roles.length > 0 ? employee.roles[0].name : '-'}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
         </div>
     );
 } 

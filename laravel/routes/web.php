@@ -8,6 +8,7 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AbsenceController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -122,6 +123,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/leaves/{leave}/status', [LeaveController::class, 'updateStatus'])
             ->middleware('can:validate_leaves')
             ->name('leaves.update-status');
+    });
+
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/absences', [AbsenceController::class, 'index']);
+        Route::post('/absences', [AbsenceController::class, 'store']);
+        Route::get('/absences/{id}', [AbsenceController::class, 'show']);
+        Route::post('/absences/{id}/approve', [AbsenceController::class, 'approve']);
+        Route::post('/absences/{id}/reject', [AbsenceController::class, 'reject']);
+        Route::delete('/absences/{id}', [AbsenceController::class, 'destroy']);
     });
 
     // Notification routes

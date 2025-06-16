@@ -10,7 +10,17 @@ export default function Sidebar({ user, roleLabel, permissions, selectedFeature,
         {
             label: 'Demander un congé',
             permission: 'request_leave',
-            roles: ['admin', 'leader', 'employee']
+            roles: [ 'leader', 'employee']
+        },
+        {
+            label: 'Demander une absence',
+            permission: 'request_absence',
+            roles: ['employee', 'leader']
+        },
+        {
+            label: 'Gérer les absences',
+            permission: 'manage_absences',
+            roles: ['admin', 'leader']
         },
         {
             label: 'Gérer tous les employés',
@@ -42,7 +52,11 @@ export default function Sidebar({ user, roleLabel, permissions, selectedFeature,
     const userRole = user?.roles?.[0]?.name || 'employee';
 
     const displayedFeatures = FEATURES.filter(feature => 
-        feature.roles.includes(userRole) && (!permissions || permissions.includes(feature.permission))
+        feature.roles.includes(userRole) && (
+            !permissions || 
+            permissions.includes(feature.permission) || 
+            feature.permission === 'request_absence'
+        )
     );
 
     return (

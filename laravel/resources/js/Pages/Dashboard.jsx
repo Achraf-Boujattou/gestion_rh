@@ -9,6 +9,8 @@ import StatisticsView from './Dashboard/StatisticsView';
 import LeaveIndex from './Leave/Index';
 import { useForm } from '@inertiajs/react';
 import { useTheme } from '@/Context/ThemeContext';
+import EmployeeAbsenceList from '../components/EmployeeAbsenceList';
+import AbsenceManagement from '../components/AbsenceManagement';
 
 // FEATURES constant is now in Sidebar.jsx
 
@@ -146,7 +148,7 @@ export default function Dashboard({
     };
 
     const handleFeatureClick = (feature) => {
-            setSelectedFeature(feature);
+        setSelectedFeature(feature);
         switch (feature.label) {
             case 'Gérer tous les employés':
                 setMainContent('employees');
@@ -162,6 +164,12 @@ export default function Dashboard({
                 break;
             case 'Valider les congés':
                 setMainContent('validate-leaves');
+                break;
+            case "Demander une absence":
+                setMainContent('absence-request');
+                break;
+            case "Gérer les absences":
+                setMainContent('absence-management');
                 break;
             default:
                 setMainContent('welcome');
@@ -444,6 +452,10 @@ export default function Dashboard({
                 return renderLeaveRequestForm();
             case 'validate-leaves':
                 return <LeaveIndex auth={{ user }} leaves={leaves} />;
+            case 'absence-request':
+                return <EmployeeAbsenceList />;
+            case 'absence-management':
+                return <AbsenceManagement />;
             default:
                 return (
                     <div className="welcome-box">
@@ -1353,7 +1365,7 @@ export default function Dashboard({
             <Sidebar 
                 user={user}
                 roleLabel={roleLabel}
-                permissions={[...permissions, 'request_leave', 'view_dashboard']}
+                permissions={[...permissions, 'manage_absences', 'request_leave', 'view_dashboard']}
                 selectedFeature={selectedFeature}
                 onFeatureClick={handleFeatureClick}
             />

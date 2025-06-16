@@ -11,32 +11,37 @@ class DepartmentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Department::with('leader');
+        try {
+            // Charger les leaders avec les départements
+            $query = \App\Models\Department::with('leader');
 
-        // Recherche
-        if ($request->search) {
-            $searchTerm = $request->search;
-            $query->where('name', 'like', "%{$searchTerm}%");
-        }
+            // Recherche éventuelle
+            if ($request->search) {
+                $query->where('name', 'like', "%{$request->search}%");
+            }
 
-        // Tri
-        $sortField = $request->input('sort_field', 'name');
-        $sortDirection = $request->input('sort_direction', 'asc');
-
-        if ($sortField === 'leader_id') {
-            $query->leftJoin('users', 'departments.leader_id', '=', 'users.id')
-                  ->orderBy('users.name', $sortDirection)
-                  ->select('departments.*');
-        } else {
+            // Tri éventuel
+            $sortField = $request->input('sort_field', 'name');
+            $sortDirection = $request->input('sort_direction', 'asc');
             $query->orderBy($sortField, $sortDirection);
-        }
 
-        // Pagination
-        $departments = $query->paginate(10);
+            // Pagination
+            $departments = $query->paginate(10);
 
-        if ($request->wantsJson() || $request->header('X-Inertia')) {
+            // Transformation pour le frontend
+            $departmentsTransformed = $departments->getCollection()->map(function ($department) {
+                return [
+                    'id' => $department->id,
+                    'name' => $department->name,
+                    'description' => $department->description,
+                    'leader' => $department->leader
+                        ? ['id' => $department->leader->id, 'name' => $department->leader->name]
+                        : null,
+                ];
+            })->values();
+
             $response = [
-                'departments' => $departments->items(),
+                'departments' => $departmentsTransformed->all(),
                 'meta' => [
                     'current_page' => $departments->currentPage(),
                     'per_page' => $departments->perPage(),
@@ -49,26 +54,30 @@ class DepartmentController extends Controller
                 ]
             ];
 
-            if ($request->wantsJson()) {
+            \Log::info('Response data:', $response);
+            \Log::info('departments sent to frontend:', $departmentsTransformed->all());
+
+            if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json($response);
             }
+            return Inertia::render('Departments/Index', [
+                'departments' => $departmentsTransformed->all(),
+                'meta' => [
+                    'current_page' => $departments->currentPage(),
+                    'per_page' => $departments->perPage(),
+                    'total' => $departments->total(),
+                    'last_page' => $departments->lastPage(),
+                ],
+                'links' => [
+                    'prev' => $departments->previousPageUrl(),
+                    'next' => $departments->nextPageUrl(),
+                ]
+            ]);
 
-            return Inertia::render('Dashboard', $response);
+        } catch (\Exception $e) {
+            \Log::error('Error in DepartmentController@index: ' . $e->getMessage());
+            throw $e;
         }
-
-        return Inertia::render('Departments/Index', [
-            'departments' => $departments->items(),
-            'meta' => [
-                'current_page' => $departments->currentPage(),
-                'per_page' => $departments->perPage(),
-                'total' => $departments->total(),
-                'last_page' => $departments->lastPage(),
-            ],
-            'links' => [
-                'prev' => $departments->previousPageUrl(),
-                'next' => $departments->nextPageUrl(),
-            ]
-        ]);
     }
 
     public function store(Request $request)
